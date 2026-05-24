@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Command | Office</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .staff-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+        .staff-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .staff-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+        }
+        .staff-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-pink);
+        }
+        .staff-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .staff-avatar {
+            width: 48px;
+            height: 48px;
+            background: #f0f4ff;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .staff-info h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #111827;
+        }
+        .staff-info p {
+            margin: 2px 0 0;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .staff-details {
+            font-size: 13px;
+            color: #374151;
+            display: grid;
+            gap: 8px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .detail-label {
+            color: #6b7280;
+        }
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-inactive { background: #fee2e2; color: #991b1b; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            width: 500px;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            outline: none;
+        }
+    </style>
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-section" style="text-decoration: none;">
+            <img src="logo.jpeg" alt="SOHAR DENTAL LAB" style="height: 45px; object-fit: contain;">
+            <span>SOHAR DENTAL LAB</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">HOME</a>
+            <a href="clients.html">CLIENTS</a>
+            <a href="orders.html">ORDERS</a>
+            <a href="shipments.html">SHIPMENTS</a>
+            <a href="accounts.html">ACCOUNTS</a>
+            <a href="office.html" class="active">OFFICE</a>
+            <a href="reports.html">REPORTS</a>
+        </nav>
+
+    </header>
+
+    <div class="main-container">
+        <aside>
+            <div class="sidebar-section">
+                <div class="quick-actions">
+                    <div style="padding-top: 10px;">
+                        <button class="btn-action active-filter" onclick="showSection('expenses')">
+                            <i class="fas fa-wallet"></i> Expenses
+                        </button>
+                        <button class="btn-action" onclick="showSection('inward')">
+                            <i class="fas fa-file-import"></i> Goods Inward
+                        </button>
+                        <button class="btn-action" onclick="showSection('outward')">
+                            <i class="fas fa-file-export"></i> Goods Outward
+                        </button>
+                        <button class="btn-action" onclick="showSection('stock')">
+                            <i class="fas fa-boxes"></i> In Stock
+                        </button>
+                    </div>
+                    <button class="btn-action primary" onclick="showAddStaffModal()">
+                        <i class="fas fa-user-plus"></i> Add New Staff
+                    </button>
+                </div>
+            </div>
+
+            <!-- Backup & Export -->
+            <div class="sidebar-section" style="margin-top:20px;">
+                <h3
+                    style="color:#6b7280; font-size:11px; text-transform:uppercase; margin-bottom:15px; letter-spacing:0.05em; padding: 0 10px;">
+                    Backup & Export</h3>
+                <div class="quick-actions" style="display:grid; gap:10px;">
+                    <button class="btn-action"
+                        style="background:#1f2937; color:#fff; border:none; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px; font-weight:600; width:100%; cursor:pointer;"
+                        onclick="window.location.href='http://localhost:5000/api/backup/system'">
+                        <i class="fas fa-file-archive"></i> System Backup (.zip)
+                    </button>
+                    <button class="btn-action"
+                        style="background:#fff; border:1px solid #e5e7eb; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px; font-weight:600; width:100%; cursor:pointer; color:#1f2937;"
+                        onclick="showExportModal()">
+                        <i class="fas fa-file-export"></i> Export Data
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main>
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Office Management</h1>
+                </div>
+                <div class="header-stats" style="display: flex; gap: 20px;">
+                    <div class="stat-item">
+                        <span class="stat-label">Stock Value</span>
+                        <span class="stat-value" id="total-stock-value">₹0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Pending Inwards</span>
+                        <span class="stat-value" id="pending-inwards" style="color: #f59e0b;">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Inventory Sections -->
+            <div id="section-expenses" class="section-content">
+                <div class="card" style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Business Expenses</h3>
+                        <button class="btn-action primary">+ New Expense</button>
+                    </div>
+                    <p style="color: #666; font-size: 13px;">No expense records found.</p>
+                </div>
+            </div>
+
+            <div id="section-inward" class="section-content" style="display: none;">
+                <div class="card" style="padding: 20px; border-top: 2px solid var(--accent-pink);">
+                    <!-- Top Navigation Tabs (matching screenshot) -->
+                    <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('expenses')">Expenses</button>
+                        <button class="btn-action active-filter" style="padding: 6px 12px; font-size: 13px; border-color: var(--accent-pink); color: var(--accent-pink); border-style: dotted;">Goods Inward</button>
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('outward')">Goods Outward</button>
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('stock')">In Stock</button>
+                    </div>
+
+                    <!-- Filters (matching screenshot) -->
+                    <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Inward Date</label>
+                            <div style="display: flex; gap: 4px;">
+                                <select style="padding: 6px; border: 1px solid #ddd; border-radius: 4px;"><option>Today</option><option>Last 7 Days</option></select>
+                                <input type="text" value="09/05/26" style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Type</label>
+                            <select style="width: 150px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"><option>All</option></select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Supplier</label>
+                            <select style="width: 200px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"><option>All</option></select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Doc / Invoice / Ref #</label>
+                            <input type="text" placeholder="Search" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-left: auto; display: flex; gap: 10px;">
+                            <button class="btn-action" style="background: #f9fafb; color: #3b82f6; font-weight: 700; padding: 8px 24px;">New</button>
+                            <button class="btn-action" style="color: #3b82f6;"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; overflow-x: auto;">
+                        <table id="inward-table" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Supplier / Ref</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inward-tbody">
+                                <!-- Data loaded here -->
+                            </tbody>
+                        </table>
+                        <div id="inward-empty-msg" style="margin-top: 30px; border: 1px solid var(--accent-pink); padding: 10px; color: #111; font-size: 14px; width: fit-content;">
+                            No Records found for current search criterion
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-outward" class="section-content" style="display: none;">
+                <div class="card" style="padding: 20px; border-top: 2px solid var(--accent-pink);">
+                    <!-- Top Navigation Tabs (matching screenshot) -->
+                    <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('expenses')">Expenses</button>
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('inward')">Goods Inward</button>
+                        <button class="btn-action active-filter" style="padding: 6px 12px; font-size: 13px; border-color: var(--accent-pink); color: var(--accent-pink); border-style: dotted;">Goods Outward</button>
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('stock')">In Stock</button>
+                    </div>
+
+                    <!-- Filters (matching screenshot) -->
+                    <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Outward Date</label>
+                            <div style="display: flex; gap: 4px;">
+                                <select style="padding: 6px; border: 1px solid #ddd; border-radius: 4px;"><option>Today</option></select>
+                                <input type="text" value="09/05/26" style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Type</label>
+                            <select style="width: 150px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"><option>All</option></select>
+                        </div>
+                        <div style="margin-left: auto; display: flex; gap: 10px;">
+                            <button class="btn-action" style="background: #f9fafb; color: #3b82f6; font-weight: 700; padding: 8px 24px;">New</button>
+                            <button class="btn-action" style="background: #f9fafb; color: #3b82f6; font-weight: 700; padding: 8px 24px;">Scan Out</button>
+                            <button class="btn-action" style="color: #3b82f6;" onclick="fetchTransactions('Outward')"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div style="margin-top: 20px; overflow-x: auto;">
+                        <table id="outward-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Reference</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="outward-tbody">
+                                <!-- Data loaded here -->
+                            </tbody>
+                        </table>
+                        <div id="outward-empty-msg" style="margin-top: 30px; border: 1px solid var(--accent-pink); padding: 10px; color: #111; font-size: 14px; width: fit-content;">
+                            No Records found for current search criterion
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-stock" class="section-content" style="display: none;">
+                <div class="card" style="padding: 20px; border-top: 2px solid var(--accent-pink);">
+                     <!-- Top Navigation Tabs (matching screenshot) -->
+                     <div style="display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('expenses')">Expenses</button>
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('inward')">Goods Inward</button>
+                        <button class="btn-action" style="padding: 6px 12px; font-size: 13px;" onclick="showSection('outward')">Goods Outward</button>
+                        <button class="btn-action active-filter" style="padding: 6px 12px; font-size: 13px; border-color: var(--accent-pink); color: var(--accent-pink); border-style: dotted;">In Stock</button>
+                    </div>
+
+                    <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Search</label>
+                            <input type="text" id="stock-search" placeholder="Search" oninput="fetchStock()" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Category</label>
+                            <select id="stock-category" onchange="fetchStock()" style="width: 150px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="All">- All -</option>
+                                <option value="Ceramic">Ceramic</option>
+                                <option value="Metal">Metal</option>
+                                <option value="Ortho">Ortho</option>
+                                <option value="Resins">Resins</option>
+                                <option value="Zircon">Zircon</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 1px;">
+                            <button class="btn-action active-filter" style="border-radius: 4px 0 0 4px; padding: 6px 16px;">All</button>
+                            <button class="btn-action" style="border-radius: 0; padding: 6px 16px;">Low</button>
+                            <button class="btn-action" style="border-radius: 0; padding: 6px 16px;">Expired</button>
+                            <button class="btn-action" style="border-radius: 0 4px 4px 0; padding: 6px 16px;">Expiring</button>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table style="border: 1px solid #ddd;">
+                            <thead style="background: #f3f4f6;">
+                                <tr>
+                                    <th style="border: 1px solid #ddd;">Sr</th>
+                                    <th style="border: 1px solid #ddd;">Item</th>
+                                    <th style="border: 1px solid #ddd;">Code</th>
+                                    <th style="border: 1px solid #ddd;">Category</th>
+                                    <th style="border: 1px solid #ddd;">Reorder Level</th>
+                                    <th style="border: 1px solid #ddd;">Total Stock</th>
+                                    <th style="border: 1px solid #ddd;">Expired</th>
+                                    <th style="border: 1px solid #ddd;">Avlbl Stock</th>
+                                    <th style="border: 1px solid #ddd;">Expiring</th>
+                                    <th style="border: 1px solid #ddd;">Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-tbody">
+                                <!-- Data loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        async function fetchStock() {
+            try {
+                const search = document.getElementById('stock-search').value;
+                const category = document.getElementById('stock-category').value;
+                const res = await fetch(`${API_BASE}/materials?search=${search}&category=${category}`);
+                const materials = await res.json();
+                renderStock(materials);
+            } catch (err) {
+                console.error('Error fetching stock:', err);
+            }
+        }
+
+        function renderStock(materials) {
+            const tbody = document.getElementById('stock-tbody');
+            tbody.innerHTML = materials.map((m, index) => `
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${index + 1}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; color: #1e3a8a; font-weight: 600;">${m.name}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${m.code || ''}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${m.category || ''}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${m.reorderLevel || 0}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${m.stock || 0}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${m.expired || 0}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: 700;">${m.stock || 0}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${m.expiring || 0}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${m.unit || 'pc'}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function fetchTransactions(type) {
+            try {
+                const res = await fetch(`${API_BASE}/inventory/transactions?type=${type}`);
+                const transactions = await res.json();
+                renderTransactions(type, transactions);
+            } catch (err) {
+                console.error(`Error fetching ${type} transactions:`, err);
+            }
+        }
+
+        function renderTransactions(type, transactions) {
+            const tbodyId = type === 'Inward' ? 'inward-tbody' : 'outward-tbody';
+            const msgId = type === 'Inward' ? 'inward-empty-msg' : 'outward-empty-msg';
+            const tableId = type === 'Inward' ? 'inward-table' : 'outward-table';
+            
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+
+            if (transactions.length === 0) {
+                document.getElementById(msgId).style.display = 'block';
+                if (document.getElementById(tableId)) document.getElementById(tableId).style.display = 'none';
+            } else {
+                document.getElementById(msgId).style.display = 'none';
+                if (document.getElementById(tableId)) document.getElementById(tableId).style.display = 'table';
+                
+                tbody.innerHTML = transactions.map(t => `
+                    <tr>
+                        <td>${new Date(t.date).toLocaleDateString()}</td>
+                        <td style="color: #1e3a8a; font-weight: 600;">${t.material ? t.material.name : 'Unknown'}</td>
+                        <td>${t.quantity} ${t.material ? t.material.unit : ''}</td>
+                        <td>${t.docNumber || t.supplier || '-'}</td>
+                        <td>${t.notes || ''}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+            const targetSection = document.getElementById(`section-${section}`);
+            if (targetSection) targetSection.style.display = 'block';
+            
+            // Sidebar buttons active state
+            document.querySelectorAll('.sidebar-section .btn-action').forEach(b => {
+                b.classList.remove('active-filter');
+                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${section}'`)) {
+                    b.classList.add('active-filter');
+                }
+            });
+
+            // Initial fetches for inventory sections
+            if (section === 'stock') fetchStock();
+            if (section === 'inward') fetchTransactions('Inward');
+            if (section === 'outward') fetchTransactions('Outward');
+        }
+
+
+        // Initialize
+        const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        document.querySelectorAll('input[value="09/05/26"]').forEach(input => input.value = today);
+        
+        showSection('inward');
+    </script>
+</body>
+</html>

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Command | Accounts</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-section" style="text-decoration: none;">
+            <img src="logo.jpeg" alt="SOHAR DENTAL LAB" style="height: 45px; object-fit: contain;">
+            <span>SOHAR DENTAL LAB</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">HOME</a>
+            <a href="clients.html">CLIENTS</a>
+            <a href="orders.html">ORDERS</a>
+            <a href="shipments.html">SHIPMENTS</a>
+            <a href="accounts.html" class="active">ACCOUNTS</a>
+            <a href="office.html">OFFICE</a>
+            <a href="reports.html">REPORTS</a>
+        </nav>
+
+    </header>
+
+    <div class="container" style="display:flex; min-height: calc(100vh - 60px);">
+        <!-- Sidebar -->
+        <aside style="width: 200px; background: #f3f4f6; border-right: 1px solid #ddd; padding: 0;">
+            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563;">Invoices</div>
+            <div class="sidebar-items">
+                <a href="#" class="sidebar-link active" onclick="loadInvoices('all', 'Search Invoices')">Search</a>
+                <a href="#" class="sidebar-link" onclick="loadGenerateInvoices('generate', 'Generate Invoices')">Generate Invoices</a>
+                <a href="#" class="sidebar-link" onclick="loadInvoices('awaiting', 'Awaiting Payment')">Awaiting Payment</a>
+                <a href="#" class="sidebar-link" onclick="loadInvoices('paid', 'Paid invoices')">Paid invoices</a>
+                <a href="#" class="sidebar-link" onclick="loadInvoices('cancelled', 'Cancelled Invoices')">Cancelled Invoices</a>
+            </div>
+            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Collections</div>
+            <div class="sidebar-items">
+                <a href="#" class="sidebar-link" onclick="loadReceipts('payments', 'Payments')">Payments</a>
+                <a href="#" class="sidebar-link" onclick="loadReceipts('cancelled', 'Cancelled Payments')">Cancelled Payments</a>
+            </div>
+            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Adjustments</div>
+            <div class="sidebar-items">
+                <a href="#" class="sidebar-link" onclick="loadAdjustments('Credit', 'Credit Adjustments')">Credit Adjustments</a>
+                <a href="#" class="sidebar-link" onclick="loadAdjustments('Debit', 'Debit Adjustments')">Debit Adjustments</a>
+                <a href="#" class="sidebar-link" onclick="loadAdjustments('Journal', 'Journal Voucher')">Journal Voucher</a>
+            </div>
+            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Backup & Export</div>
+            <div class="sidebar-items">
+                <a href="http://localhost:5000/api/backup/system" class="sidebar-link"><i class="fas fa-file-archive"></i> System Backup (.zip)</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="showExportModal()"><i class="fas fa-file-export"></i> Export Data</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main style="flex: 1; padding: 20px; background: #fff;" class="fade-in">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1 id="page-title" style="font-size: 20px; color: #1f2937;">Search Invoices</h1>
+                <div style="display:flex; gap:10px;">
+                    <button id="btn-new-payment" class="btn-action primary" style="background:#ec4899; color:#fff; display:none;" onclick="openNewPaymentModal()">+ New Payment</button>
+                    <button class="btn-action primary" onclick="location.href='new-order.html'">+ New Invoice</button>
+                </div>
+            </div>
+
+            <!-- Advanced Filter Card -->
+            <div class="card" style="padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; background: #fff;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:5px;"><input type="radio" checked> Search <input type="radio"> Scan</label>
+                        <input type="text" id="invoice-search-input" placeholder="Name / Code / Cell / Email / #" style="width:100%; padding:6px; border:1px solid #ccc;" onkeyup="if(event.key==='Enter') loadData()" oninput="if(this.value.length > 2 || this.value.length === 0) loadData()">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:5px;">Payment</label>
+                        <select id="filter-payment" style="width:100%; padding:6px; border:1px solid #ccc;"><option value="">Ignore</option><option>Paid</option><option>Unpaid</option></select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:5px;">Tax</label>
+                        <select id="filter-tax" style="width:100%; padding:6px; border:1px solid #ccc;"><option value="">Ignore</option><option>With Tax</option><option>Without Tax</option></select>
+                    </div>
+                    <div style="display:flex; align-items:flex-end;">
+                        <button class="btn-action" onclick="loadData()"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center; background: #f9fafb; padding: 10px; border: 1px solid #ddd;">
+                    <div style="font-size:12px;">
+                        <label>Invoice Date</label>
+                        <select style="padding:4px; margin-left:10px;"><option>Month To Date</option></select>
+                    </div>
+                    <input type="date" value="2026-04-01" style="padding:4px; border:1px solid #ccc;">
+                    <input type="date" value="2026-04-25" style="padding:4px; border:1px solid #ccc;">
+                </div>
+                <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
+                    <span style="font-size:13px; font-weight:700; color: var(--accent-pink);">Client Search</span>
+                    <input type="text" id="filter-client" placeholder="Name / Code / Cell / Email" style="flex:1; padding:6px; border:1px solid #ccc;" oninput="loadData()">
+                    <a href="#" style="font-size:12px; color:#3b82f6; text-decoration:none;">Advanced Search</a>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <button class="btn-toolbar"><i class="fas fa-print"></i> Print</button>
+                <button class="btn-toolbar"><i class="fas fa-envelope"></i> Email</button>
+                <button id="btn-bulk-generate-invoice" class="btn-toolbar" style="display:none; background: #10b981; color: #fff; border-color: #059669;" onclick="openConfirmInvoiceModal()"><i class="fas fa-file-invoice-dollar"></i> Generate Invoice</button>
+                <a href="#" style="margin-left:auto; font-size:13px; color:#3b82f6; text-decoration:none; font-weight:700;">Fields</a>
+            </div>
+
+            <!-- Table -->
+            <div class="card" style="padding:0; overflow:hidden;">
+                <table id="accounts-table">
+                    <thead>
+                        <tr style="background:#f3f4f6;">
+                            <th style="width:30px;"><input type="checkbox"></th>
+                            <th>#</th>
+                            <th id="th-id">Invoice #</th>
+                            <th id="th-order">Order #</th>
+                            <th id="th-date">Invoice Date</th>
+                            <th>Client</th>
+                            <th id="th-amount">Amount</th>
+                            <th id="th-due">Due Date</th>
+                            <th id="th-paid">Paid</th>
+                            <th id="th-balance">Balance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .sidebar-link {
+            display: block;
+            padding: 8px 15px;
+            font-size: 13px;
+            color: #1f2937;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-link:hover { background: #e5e7eb; }
+        .sidebar-link.active {
+            background: #fff;
+            border-left-color: #ec4899;
+            color: #ec4899;
+            font-weight: 700;
+        }
+        .btn-toolbar {
+            padding: 4px 10px;
+            font-size: 12px;
+            background: #fff;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        #accounts-table th { font-size: 11px; text-transform: uppercase; color: #4b5563; padding: 10px; border-bottom: 1px solid #ddd; }
+        #accounts-table td { font-size: 13px; padding: 10px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+    </style>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let currentMode = 'invoices';
+
+        async function loadClients() {
+            const res = await fetch(`${API_BASE}/clients`);
+            const clients = await res.json();
+            const select = document.getElementById('filter-client');
+            clients.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                select.appendChild(opt);
+            });
+        }
+
+        async function loadInvoices(filter, title) {
+            currentMode = 'invoices';
+            document.getElementById('page-title').textContent = title;
+            document.getElementById('btn-new-payment').style.display = 'none';
+            document.getElementById('btn-bulk-generate-invoice').style.display = 'none';
+            updateHeaders('invoices');
+            
+            try {
+                let url = `${API_BASE}/invoices?`;
+                if (filter === 'paid') url += 'status=Paid&';
+                else if (filter === 'awaiting') url += 'status=Unpaid&';
+                else if (filter === 'cancelled') url += 'status=Cancelled&';
+                
+                const search = document.getElementById('invoice-search-input').value;
+                const clientSearch = document.getElementById('filter-client').value;
+                if (search || clientSearch) {
+                    const combined = [search, clientSearch].filter(Boolean).join(' ');
+                    url += `search=${encodeURIComponent(combined)}&`;
+                }
+
+                const res = await fetch(url);
+                const invoices = await res.json();
+                renderTable(invoices, 'invoice');
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadGenerateInvoices(filter, title) {
+            currentMode = 'generate';
+            document.getElementById('page-title').textContent = title;
+            document.getElementById('btn-bulk-generate-invoice').style.display = 'block';
+            updateHeaders('generate');
+
+            try {
+                let url = `${API_BASE}/orders?invoiceStatus=Pending`;
+                const search = document.getElementById('invoice-search-input').value;
+                const clientSearch = document.getElementById('filter-client').value;
+                if (search || clientSearch) {
+                    const combined = [search, clientSearch].filter(Boolean).join(' ');
+                    url += `&search=${encodeURIComponent(combined)}`;
+                }
+                
+                const res = await fetch(url);
+                const orders = await res.json();
+                renderTable(orders, 'order');
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadReceipts(filter, title) {
+            currentMode = 'payments';
+            document.getElementById('page-title').textContent = title;
+            document.getElementById('btn-new-payment').style.display = 'block';
+            updateHeaders('payments');
+
+            try {
+                let url = `${API_BASE}/receipts?`;
+                if (filter === 'cancelled') url += 'status=Cancelled&';
+                
+                const search = document.getElementById('invoice-search-input').value;
+                const clientSearch = document.getElementById('filter-client').value;
+                if (search || clientSearch) {
+                    const combined = [search, clientSearch].filter(Boolean).join(' ');
+                    url += `search=${encodeURIComponent(combined)}&`;
+                }
+
+                const res = await fetch(url);
+                const receipts = await res.json();
+                renderTable(receipts, 'receipt');
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadAdjustments(type, title) {
+            currentMode = 'adjustments';
+            document.getElementById('page-title').textContent = title;
+            updateHeaders('adjustments');
+
+            try {
+                const res = await fetch(`${API_BASE}/adjustments`);
+                let adjustments = await res.json();
+                if (type !== 'Journal') adjustments = adjustments.filter(a => a.type === type);
+                renderTable(adjustments, 'adjustment');
+            } catch (err) { console.error(err); }
+        }
+        function getStatusColor(status) {
+            switch(status) {
+                case 'New': return '#6366f1';
+                case 'In Production': return '#6366f1';
+                case 'Complete': return '#10b981';
+                case 'Hold': return '#f59e0b';
+                case 'Cancelled': return '#ef4444';
+                case 'Try In': return '#ec4899';
+                case 'Delivered': return '#1e3a8a';
+                default: return '#9ca3af';
+            }
+        }
+        function updateHeaders(mode) {
+            const thead = document.querySelector('#accounts-table thead');
+            if (mode === 'invoices') {
+                thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox"></th><th>#</th><th>Invoice #</th><th>Order #</th><th>Invoice Date</th><th>Client</th><th>Amount</th><th>Due Date</th><th>Paid</th><th>Balance</th><th>Actions</th></tr>';
+            } else if (mode === 'generate') {
+                thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox"></th><th>#</th><th>Order #</th><th>Order Date</th><th>Client</th><th>Patient</th><th>Product</th><th>Model #</th><th>Status</th><th>Actions</th></tr>';
+            } else if (mode === 'payments') {
+                thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox"></th><th>#</th><th>Receipt #</th><th>Date</th><th>Client</th><th>Amount</th><th>Applied</th><th>Balance</th><th>Actions</th></tr>';
+            } else if (mode === 'adjustments') {
+                thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox"></th><th>#</th><th>Adj #</th><th>Date</th><th>Client</th><th>Type</th><th>Amount</th><th>Invoice</th><th>Actions</th></tr>';
+            }
+        }
+
+        function renderTable(data, type) {
+            const tbody = document.querySelector('#accounts-table tbody');
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:20px; color:#9ca3af;">No records found</td></tr>`;
+                return;
+            }
+            data.forEach((item, idx) => {
+                const row = document.createElement('tr');
+                if (type === 'invoice') {
+                    row.innerHTML = `
+                        <td><input type="checkbox"></td>
+                        <td>${idx + 1}</td>
+                        <td><a href="#" onclick="viewInvoice(${item.id}); return false;" style="color:#3b82f6; text-decoration:none; font-weight:700;">${item.invoiceNumber || item.id}</a></td>
+                        <td><a href="orders.html?editOrder=${(item.orders && item.orders.length > 0) ? item.orders[0].id : (item.orderIds ? item.orderIds[0] : '')}" style="color:#3b82f6; text-decoration:none;">${(item.orders && item.orders.length > 0) ? '#' + item.orders.map(o => o.orderNumber || o.id).join(', #') : (item.orderIds ? '#' + item.orderIds.join(', #') : 'N/A')}</a></td>
+                        <td>${new Date(item.invoiceDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}</td>
+                        <td><a href="shipments.html?clientId=${item.clientId}" style="color:#3b82f6; text-decoration:none;">${item.client ? item.client.name : ''}</a></td>
+                        <td>${(item.netAmount || 0).toFixed(2)}</td>
+                        <td>${item.dueDate ? new Date(item.dueDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : 'N/A'}</td>
+                        <td style="color:#10b981; font-weight:700;">${(item.paidAmount || 0).toFixed(2)}</td>
+                        <td style="color:#ef4444; font-weight:700;">${(item.balanceAmount || 0).toFixed(2)}</td>
+                        <td>
+                            <i class="fas fa-eye" style="color:#3b82f6; cursor:pointer; margin-right:8px;" onclick="viewInvoice(${item.id})" title="View Invoice"></i>
+                            <i class="fas fa-print" style="color:#3b82f6; cursor:pointer; margin-right:8px;" onclick="downloadInvoicePDF(${item.id})" title="Download PDF"></i>
+                            <i class="fas fa-edit" style="color:#3b82f6; cursor:pointer;" onclick="openEditModal('invoice', ${item.id})" title="Edit Details"></i>
+                        </td>
+                    `;
+                } else if (type === 'order') {
+                    row.dataset.orderId = item.id;
+                    const statusColor = getStatusColor(item.status);
+                    row.innerHTML = `
+                        <td><input type="checkbox" class="order-cb"></td>
+                        <td>${idx + 1}</td>
+                        <td><a href="orders.html?editOrder=${item.id}" style="color:#3b82f6; text-decoration:none; font-weight:700;">${item.orderNumber || item.id}</a></td>
+                        <td>${new Date(item.receivedDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}</td>
+                        <td><a href="shipments.html?clientId=${item.clientId}" style="color:#3b82f6; text-decoration:none;">${item.client ? item.client.name : ''}</a></td>
+                        <td>${item.patientName || '-'}</td>
+                        <td>${item.productName || item.productType || '-'}</td>
+                        <td>${item.modelNumber || '-'}</td>
+                        <td><span style="display:inline-block; width:10px; height:10px; background:${statusColor}; border-radius:2px; margin-right:5px;"></span>${item.status || '-'}</td>
+                        <td><button class="btn-action" style="font-size:11px; padding:2px 8px;" onclick="generateInvoice(${item.id}, ${item.clientId})">Generate</button></td>
+                    `;
+                } else if (type === 'receipt') {
+                    row.innerHTML = `
+                        <td><input type="checkbox"></td>
+                        <td>${idx + 1}</td>
+                        <td>${item.receiptNumber || item.id}</td>
+                        <td>${new Date(item.receiptDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}</td>
+                        <td><a href="shipments.html?clientId=${item.clientId}" style="color:#3b82f6; text-decoration:none;">${item.client ? item.client.name : ''}</a></td>
+                        <td>${(item.amount || 0).toFixed(2)}</td>
+                        <td>${(item.appliedAmount || 0).toFixed(2)}</td>
+                        <td>${(item.creditAmount || 0).toFixed(2)}</td>
+                        <td><i class="fas fa-print" style="color:#3b82f6; cursor:pointer;"></i></td>
+                    `;
+                } else if (type === 'adjustment') {
+                    row.innerHTML = `
+                        <td><input type="checkbox"></td>
+                        <td>${idx + 1}</td>
+                        <td>${item.adjustmentNumber || item.id}</td>
+                        <td>${new Date(item.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}</td>
+                        <td>${item.client ? item.client.name : ''}</td>
+                        <td style="color:${item.type === 'Credit' ? '#10b981' : '#ef4444'}; font-weight:700;">${item.type}</td>
+                        <td>${(item.amount || 0).toFixed(2)}</td>
+                        <td>${item.invoice ? item.invoice.invoiceNumber : ''}</td>
+                        <td><i class="fas fa-edit" style="color:#3b82f6; cursor:pointer;"></i></td>
+                    `;
+                }
+                tbody.appendChild(row);
+            });
+        }
+
+        async function generateInvoice(orderId, clientId) {
+            try {
+                const res = await fetch(`${API_BASE}/invoices`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        orderIds: [orderId],
+                        clientId: clientId
+                    })
+                });
+                if (res.ok) {
+                    const invoice = await res.json();
+                    alert('Invoice generated successfully!');
+                    // Automatically download after generating
+                    downloadInvoicePDF(invoice.id);
+                    loadGenerateInvoices('generate', 'Generate Invoices');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function openNewPaymentModal() {
+            openEditModal('payment', null);
+        }
+
+        async function openEditModal(type, id) {
+            let url = '';
+            let title = '';
+            let data = {};
+
+            if (id) {
+                if (type === 'invoice') { url = `${API_BASE}/invoices/${id}`; title = 'Edit Invoice'; }
+                if (type === 'payment') { url = `${API_BASE}/receipts/${id}`; title = 'Payment'; }
+
+                try {
+                    const res = await fetch(url);
+                    data = await res.json();
+                } catch (err) { console.error(err); }
+            } else {
+                title = 'New Payment';
+                data = {
+                    receiptNumber: 'RCP-' + Date.now().toString().slice(-6),
+                    receiptDate: new Date().toISOString(),
+                    amount: 0,
+                    appliedAmount: 0,
+                    creditAmount: 0,
+                    paymentMode: 'Cash',
+                    chequeNumber: '',
+                    notes: '',
+                    clientId: ''
+                };
+            }
+
+            let clientOptions = '<option value="">Select Client</option>';
+            try {
+                const res = await fetch(`${API_BASE}/clients`);
+                const clients = await res.json();
+                clientOptions += clients.map(c => `<option value="${c.id}" ${data.clientId == c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+            } catch (err) {}
+
+            let contentHtml = '';
+            let footerHtml = '';
+
+            if (type === 'payment') {
+                contentHtml = `
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:11px; color:#666;">Client</label>
+                        <select id="edit-client" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">${clientOptions}</select>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <div>
+                            <label style="display:block; font-size:11px; color:#666;">Amount</label>
+                            <input type="number" id="edit-amount" value="${data.amount}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:11px; color:#666;">Payment Date</label>
+                            <input type="date" id="edit-date" value="${new Date(data.receiptDate).toISOString().split('T')[0]}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:11px; color:#666;">Receipt #</label>
+                            <input type="text" id="edit-ref" value="${data.receiptNumber}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px; margin-bottom:15px;">
+                        <div>
+                            <label style="display:block; font-size:11px; color:#666;">Payment Mode</label>
+                            <select id="edit-mode" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                                <option ${data.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
+                                <option ${data.paymentMode === 'Cheque' ? 'selected' : ''}>Cheque</option>
+                                <option ${data.paymentMode === 'Bank Transfer' ? 'selected' : ''}>Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:11px; color:#666;">Cheque/Ref #</label>
+                            <input type="text" id="edit-cheque" value="${data.chequeNumber || ''}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label style="display:block; font-size:11px; color:#666;">Notes</label>
+                        <input type="text" id="edit-notes" value="${data.notes || ''}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                    </div>
+                `;
+                footerHtml = `
+                    <div style="display:flex; gap:10px; width:100%; justify-content: flex-end;">
+                        <button onclick="saveEditData('${type}', ${id})" style="padding:8px 25px; border:none; background:#3b82f6; color:#fff; border-radius:4px; cursor:pointer; font-weight:600;">Save Receipt</button>
+                        <button onclick="closeEditModal()" style="padding:8px 20px; border:1px solid #3b82f6; color:#3b82f6; background:#fff; border-radius:4px; cursor:pointer;">Cancel</button>
+                    </div>
+                `;
+            } else {
+                contentHtml = `
+                    <div style="margin:20px 0;">
+                        <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Reference #</label>
+                        <input type="text" id="edit-ref" value="${data.invoiceNumber || data.receiptNumber}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Date</label>
+                        <input type="date" id="edit-date" value="${new Date(data.invoiceDate || data.receiptDate).toISOString().split('T')[0]}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:15px;">
+                        <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Amount</label>
+                        <input type="number" id="edit-amount" value="${data.netAmount || data.amount}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                `;
+                footerHtml = `
+                    <button onclick="closeEditModal()" style="padding:8px 16px; border:1px solid #ddd; background:none; border-radius:4px; cursor:pointer;">Cancel</button>
+                    <button onclick="saveEditData('${type}', ${id})" style="padding:8px 16px; border:none; background:#ec4899; color:#fff; border-radius:4px; cursor:pointer; font-weight:600;">Save Changes</button>
+                `;
+            }
+
+            const modalHtml = `
+                <div id="edit-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;">
+                    <div style="background:#fff; width:${type === 'payment' ? '500px' : '400px'}; padding:20px; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                        <h3 style="margin:0 0 15px 0; font-size:16px; border-bottom:1px solid #eee; padding-bottom:10px;">${title}</h3>
+                        <div>${contentHtml}</div>
+                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">${footerHtml}</div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function closeEditModal() {
+            const m = document.getElementById('edit-modal');
+            if (m) m.remove();
+        }
+
+        async function saveEditData(type, id) {
+            const ref = document.getElementById('edit-ref').value;
+            const date = document.getElementById('edit-date').value;
+            const amount = document.getElementById('edit-amount').value;
+            
+            let url = '';
+            let body = {};
+            if (type === 'invoice') {
+                url = id ? `${API_BASE}/invoices/${id}` : `${API_BASE}/invoices`;
+                body = { invoiceNumber: ref, invoiceDate: date, netAmount: amount };
+            } else if (type === 'payment') {
+                url = id ? `${API_BASE}/receipts/${id}` : `${API_BASE}/receipts`;
+                body = { 
+                    receiptNumber: ref, 
+                    receiptDate: date, 
+                    amount: amount,
+                    clientId: document.getElementById('edit-client').value,
+                    paymentMode: document.getElementById('edit-mode').value,
+                    chequeNumber: document.getElementById('edit-cheque').value,
+                    notes: document.getElementById('edit-notes').value
+                };
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) {
+                    closeEditModal();
+                    loadData();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function downloadInvoicePDF(id) {
+            window.location.href = `${API_BASE}/invoices/${id}/pdf`;
+        }
+
+        function viewInvoice(id) {
+            window.open(`invoice.html?id=${id}&type=invoice`, '_blank');
+        }
+
+        function loadData() {
+            if (currentMode === 'invoices') loadInvoices('all', 'Search Invoices');
+            else if (currentMode === 'order') loadGenerateInvoices('generate', 'Generate Invoices');
+            else if (currentMode === 'payments') loadReceipts('payments', 'Payments');
+            else if (currentMode === 'adjustments') loadAdjustments('Journal', 'Journal Voucher');
+        }
+
+        function loadPriceLists() { alert('Price Lists module coming soon'); }
+        function loadWarranties() { alert('Warranties module coming soon'); }
+
+        async function loadStaff() {
+            try {
+                const res = await fetch(`${API_BASE}/staff`);
+                const staff = await res.json();
+                const select = document.getElementById('assign-to');
+                if (select) {
+                    select.innerHTML = '<option></option>';
+                    staff.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.name;
+                        opt.textContent = s.name;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadClients();
+            loadStaff();
+            loadInvoices('all', 'Search Invoices');
+
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                });
+            });
+        });
+        async function openConfirmInvoiceModal() {
+            const selectedIds = Array.from(document.querySelectorAll('.order-cb:checked'))
+                .map(cb => cb.closest('tr').dataset.orderId);
+            
+            if (selectedIds.length === 0) {
+                alert("Please select at least one order to generate invoices!");
+                return;
+            }
+
+            // Fetch selected orders data
+            const orders = [];
+            for (const id of selectedIds) {
+                const res = await fetch(`${API_BASE}/orders/${id}`);
+                const order = await res.json();
+                orders.push(order);
+            }
+
+            // Group by client
+            const clientsMap = {};
+            orders.forEach(o => {
+                const cid = o.clientId;
+                if (!clientsMap[cid]) {
+                    clientsMap[cid] = {
+                        client: o.client,
+                        orders: [],
+                        total: 0
+                    };
+                }
+                clientsMap[cid].orders.push(o);
+                clientsMap[cid].total += (o.totalAmount || 0);
+            });
+
+            const clientList = Object.values(clientsMap);
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'confirm-invoice-modal';
+            modal.className = 'modal-overlay';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.background = 'rgba(0,0,0,0.5)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '20000';
+            modal.innerHTML = `
+                <div class="modal-content" style="width: 900px; max-width: 95%; background:#fff; border-radius:4px; overflow:hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                    <div class="modal-header" style="padding:15px; border-bottom:1px solid #ddd; background:#f8f9fa; display:flex; justify-content:space-between; align-items:center;">
+                        <h2 style="font-size: 18px; margin: 0; font-weight:700; color:#333;">Confirm invoices to be generated</h2>
+                        <button onclick="closeConfirmInvoiceModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: flex; gap: 30px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Tax</label>
+                                <select id="invoice-tax-type" style="padding: 4px; border: 1px solid #ccc; font-size: 13px;">
+                                    <option value="0">None 0%</option>
+                                    <option value="5">GST 5%</option>
+                                    <option value="12">GST 12%</option>
+                                    <option value="18">GST 18%</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Invoice Date</label>
+                                <input type="date" id="confirm-invoice-date" value="${new Date().toISOString().split('T')[0]}" style="padding: 4px; border: 1px solid #ccc; width: 130px; font-size: 13px;">
+                            </div>
+                        </div>
+                        
+                        <div style="font-size: 13px; display: flex; gap: 15px; margin-bottom: 15px;">
+                            <span>View</span>
+                            <label><input type="radio" name="inv-view-type" value="headers" checked> Headers</label>
+                            <label><input type="radio" name="inv-view-type" value="composite"> Composite</label>
+                            <label style="margin-left: 20px;"><input type="checkbox"> View Details</label>
+                        </div>
+                        
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #ddd;">
+                            <thead>
+                                <tr style="background: #f3f4f6; text-align: left;">
+                                    <th style="padding: 8px; border: 1px solid #ddd; width: 30px;">#</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd;">Client</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Job Total</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; width: 60px;">Tax</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Amount</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Pay Terms</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; width: 100px;">Due Date</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Orders</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${clientList.map((item, idx) => {
+                                    const payTerms = item.client.paymentTermsDays || 0;
+                                    const dueDate = new Date();
+                                    dueDate.setDate(dueDate.getDate() + payTerms);
+                                    return `
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${idx + 1}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${item.client.name}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">${item.total.toFixed(0)}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd;">0</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${item.total.toFixed(0)}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${payTerms} days</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${dueDate.toLocaleDateString('en-GB')}</td>
+                                        <td style="padding: 8px; border: 1px solid #ddd; color: #3b82f6; display: flex; align-items: center; gap: 5px;">
+                                            <i class="far fa-folder-open"></i> ${item.orders.length}
+                                        </td>
+                                    </tr>
+                                `}).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button onclick="saveGeneratedBulkInvoices()" style="padding: 8px 25px; background: #fff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 3px; cursor: pointer; font-weight: 700;">Save Invoice</button>
+                            <button onclick="closeConfirmInvoiceModal()" style="padding: 8px 20px; background: #fff; border: 1px solid #ddd; color: #666; border-radius: 3px; cursor: pointer;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.dataset.orders = JSON.stringify(orders);
+        }
+
+        function closeConfirmInvoiceModal() {
+            const modal = document.getElementById('confirm-invoice-modal');
+            if (modal) modal.remove();
+        }
+
+        async function saveGeneratedBulkInvoices() {
+            const modal = document.getElementById('confirm-invoice-modal');
+            const orders = JSON.parse(modal.dataset.orders);
+            const clientsMap = {};
+            
+            orders.forEach(o => {
+                if (!clientsMap[o.clientId]) clientsMap[o.clientId] = [];
+                clientsMap[o.clientId].push(o.id);
+            });
+
+            const invoiceDate = document.getElementById('confirm-invoice-date').value;
+            const taxPercentage = parseFloat(document.getElementById('invoice-tax-type').value) || 0;
+            
+            for (const clientId in clientsMap) {
+                const orderIds = clientsMap[clientId];
+                
+                // Fetch full order data to compute gross
+                const ordersToInvoice = orders.filter(o => o.clientId == clientId);
+                const grossAmount = ordersToInvoice.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+                const taxAmount = grossAmount * (taxPercentage / 100);
+                const netAmount = grossAmount + taxAmount;
+
+                const res = await fetch(`${API_BASE}/invoices`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        orderIds: orderIds,
+                        clientId: parseInt(clientId),
+                        invoiceDate: invoiceDate,
+                        grossAmount: grossAmount,
+                        taxAmount: taxAmount,
+                        netAmount: netAmount
+                    })
+                });
+                if (res.ok) {
+                    const invoice = await res.json();
+                    window.open(`${API_BASE}/invoices/${invoice.id}/pdf`, '_blank');
+                }
+            }
+
+            alert('Invoices generated successfully!');
+            closeConfirmInvoiceModal();
+            loadGenerateInvoices('generate', 'Generate Invoices');
+        }
+    </script>
+</body>
+</html>

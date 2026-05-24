@@ -1,0 +1,351 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Client {
+  id                 Int       @id @default(autoincrement())
+  code               String?   @unique 
+  salutation         String?   @default("Dr.")
+  name               String    
+  contactPerson      String?
+  doctorName         String?
+  regNum             String?
+  workingHours       String?
+  salesManager       String?
+
+  email              String?
+  phone              String?
+  phone2             String?
+  cellPhone          String?
+  cellPhone2         String?
+  
+  city               String?
+  area               String?
+  pinCode            String?
+  address            String?
+  address2           String?
+  
+  deliveryMethod     String?   @default("Courier")
+  route              String?   @default("Default")
+  priceBand          String?   @default("Standard")
+  taxId              String?
+  creditLimit        Float?    @default(0)
+  paymentTermsDays   Int?      @default(0)
+  openingBalance     Float?    @default(0)
+  openingBalanceType String?   @default("Dr")
+  categories         String?
+  
+  defaultDeliveryAgent String?
+  collectionCentre     String?
+  regularVisits        String?
+  taxExemption         Boolean   @default(false)
+  isDentalLab          Boolean   @default(false)
+  billTo               String?   @default("Self")
+
+  trn                String?
+  discountPercentage Float?    @default(0)
+  priceListCategory  String?
+  status             String    @default("Active")
+  notes              String?
+  advanceBalance     Float     @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  orders             Order[]
+  invoices           Invoice[]
+  receipts           Receipt[]
+  shipmentNotes      ShipmentNote[]
+  adjustments        Adjustment[]
+  pickupRequests     PickupRequest[]
+}
+
+model PickupRequest {
+  id             Int       @id @default(autoincrement())
+  clientId       Int
+  client         Client    @relation(fields: [clientId], references: [id])
+  patientName    String?
+  productType    String?
+  doctorName     String?
+  requestDate    DateTime  @default(now())
+  pickupDate     DateTime?
+  status         String    @default("Pending") // Pending, Completed, Cancelled
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Order {
+  id           Int       @id @default(autoincrement())
+  orderNumber  String?   @unique
+  orderType    String    @default("New") // New, Repeat, Repair
+  
+  clientId     Int
+  client       Client    @relation(fields: [clientId], references: [id])
+  doctorName   String?
+  
+  patientName  String
+  gender       String?
+  age          Int?
+  
+  productType  String    
+  productName  String?   
+  material     String?
+  
+  teethSelection String? 
+  
+  shade1       String?
+  shade2       String?
+  shade3       String?
+  shadeNotes   String?
+  stumpShade   String?
+  
+  priority     String    @default("Normal")
+  status       String    @default("Received") 
+  
+  receivedDate DateTime  @default(now())
+  dueDate      DateTime?
+  trialDate    DateTime?
+  finishDate   DateTime?
+  
+  hasUpperImpression Boolean @default(false)
+  hasLowerImpression Boolean @default(false)
+  hasBite           Boolean @default(false)
+  hasWaxUp          Boolean @default(false)
+  hasOldRestoration Boolean @default(false)
+  hasArticulator    Boolean @default(false)
+  hasPhotos         Boolean @default(false)
+  
+  notes        String?
+  units        Int       @default(1)
+  price        Float     @default(0)
+  discount     Float     @default(0)
+  tax          Float     @default(0)
+  totalAmount  Float     @default(0)
+  
+  // Slabs for RPD
+  slab1Rate    Float?
+  slab2Rate    Float?
+  slab1Units   Int?
+  slab2Units   Int?
+
+  grossAmount    Float     @default(0)
+  discountAmount Float     @default(0)
+  taxAmount      Float     @default(0)
+  netAmount      Float     @default(0)
+
+  technician   String?
+  department   String?
+  
+  modelNumber    String?
+  panTrayNumber  String?
+  deliveryMethod String?
+  articulatorTag String?
+  manufacturer   String?
+  subDoctor      String?
+  dropLocation   String?
+  timeSlot       String?   // Morning/Afternoon
+  
+  shippingStatus String?   @default("Pending") // Pending, Dispatched, Delivered, Returned
+  
+  shipmentNoteId Int?
+  shipmentNote   ShipmentNote? @relation(fields: [shipmentNoteId], references: [id])
+  
+  invoiceId    Int?
+  invoice      Invoice?  @relation(fields: [invoiceId], references: [id])
+  
+  warranty     Warranty?
+  pickupReturns PickupReturn[]
+  media        Media[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  holdFrom       DateTime?
+  holdReason     String?
+  cancelledOn    DateTime?
+  cancelledReason String?
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  url       String
+  filename  String?
+  mimetype  String?
+  createdAt DateTime @default(now())
+}
+
+model ShipmentNote {
+  id             Int       @id @default(autoincrement())
+  noteNumber     String    @unique
+  clientId       Int
+  client         Client    @relation(fields: [clientId], references: [id])
+  noteDate       DateTime  @default(now())
+  type           String    @default("Final") // Final, TryIn
+  status         String    @default("Created") // Created, Printed, Dispatched, Delivered
+  
+  deliveryMode   String?
+  notes          String?
+
+  orders         Order[]
+  
+  deliveryPlanId Int?
+  deliveryPlan   DeliveryPlan? @relation(fields: [deliveryPlanId], references: [id])
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model DeliveryPlan {
+  id             Int       @id @default(autoincrement())
+  planDate       DateTime  @default(now())
+  route          String?
+  driverId       Int?
+  driver         Staff?    @relation(fields: [driverId], references: [id])
+  status         String    @default("Scheduled") // Scheduled, In Progress, Completed
+  
+  shipmentNotes  ShipmentNote[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model PickupReturn {
+  id             Int       @id @default(autoincrement())
+  orderId        Int
+  order          Order     @relation(fields: [orderId], references: [id])
+  itemType       String?   // Impression, Wax Trial, etc.
+  status         String    @default("Pending Pickup") // Pending Pickup, Received at Lab
+  pickupDate     DateTime?
+  receivedDate   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Invoice {
+  id            Int       @id @default(autoincrement())
+  invoiceNumber String    @unique
+  clientId      Int
+  client         Client    @relation(fields: [clientId], references: [id])
+  invoiceDate   DateTime  @default(now())
+  dueDate       DateTime?
+  grossAmount     Float     @default(0)
+  discountAmount  Float     @default(0)
+  taxAmount       Float     @default(0)
+  netAmount       Float     @default(0)
+  paidAmount    Float     @default(0)
+  balanceAmount Float
+  status        String    @default("Unpaid") // Unpaid, Partial, Paid
+  orders         Order[]
+  adjustments    Adjustment[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Receipt {
+  id            Int       @id @default(autoincrement())
+  receiptNumber String    @unique
+  receiptDate   DateTime  @default(now())
+  clientId      Int
+  client        Client    @relation(fields: [clientId], references: [id])
+  amount        Float
+  appliedAmount Float     @default(0)
+  creditAmount  Float     @default(0)
+  paymentMode   String?   // Cash, Bank, Cheque
+  isAdvance     Boolean   @default(false)
+  chequeNumber  String?
+  chequeDate    DateTime?
+  bankName      String?
+  reference     String?   // Transaction ID
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Adjustment {
+  id             Int       @id @default(autoincrement())
+  adjustmentNumber String    @unique
+  date           DateTime  @default(now())
+  clientId       Int
+  client         Client    @relation(fields: [clientId], references: [id])
+  invoiceId      Int?
+  invoice        Invoice?  @relation(fields: [invoiceId], references: [id])
+  type           String    // Credit, Debit
+  amount         Float
+  reason         String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  voucherNo   String?  @unique
+  date        DateTime @default(now())
+  amount      Float
+  paidTo      String?
+  paymentMode String?  // Cash, Cheque, Online
+  reference   String?  // Cheque/Ref No
+  notes       String?
+  category    String?  @default("General")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Warranty {
+  id              Int      @id @default(autoincrement())
+  orderId         Int      @unique
+  order           Order    @relation(fields: [orderId], references: [id])
+  durationYears   Int
+  startDate       DateTime @default(now())
+  terms           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Staff {
+  id        Int      @id @default(autoincrement())
+  name      String
+  role      String?
+  contact   String?
+  salary    Float?
+  department String?
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  deliveryPlans DeliveryPlan[]
+}
+
+model Material {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String?
+  stock       Float    @default(0)
+  unit        String?
+  minStock    Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String?
+  type        String?
+  charge      Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProductType {
+  id          Int      @id @default(autoincrement())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

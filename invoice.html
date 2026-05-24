@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice | Sohar Dental Lab</title>
+    <!-- Use html2pdf.js for high-quality PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        @page { size: A4; margin: 0; }
+        
+        * { 
+            box-sizing: border-box; 
+            -webkit-print-color-adjust: exact; 
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f7f9;
+            color: #000;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        .invoice-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #fff;
+            padding: 15mm;
+            border: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Header Layout */
+        .header-section {
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .lab-name {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 5px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .header-columns {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header-left {
+            display: flex;
+            gap: 15px;
+            width: 55%;
+        }
+
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .lab-info {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .header-right {
+            width: 40%;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .invoice-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 800;
+            margin: 10px 0;
+            text-transform: capitalize;
+        }
+
+        /* Meta Section Box */
+        .meta-container {
+            display: flex;
+            border: 2px solid #000;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .client-box {
+            flex: 1.5;
+            padding: 10px;
+            border-right: 2px solid #000;
+        }
+
+        .client-name {
+            font-weight: 800;
+            font-size: 14px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .client-address {
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .invoice-meta-box {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 800;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .barcode-area {
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .barcode-area img {
+            height: 30px;
+            max-width: 100%;
+        }
+
+        /* Table Styles */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #000;
+            table-layout: fixed;
+        }
+
+        .invoice-table th {
+            border: 1.5px solid #000;
+            padding: 8px 5px;
+            font-size: 11px;
+            font-weight: 800;
+            text-align: center;
+            background: #f8f8f8;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .invoice-table td {
+            border: 1.5px solid #000;
+            padding: 6px 5px;
+            font-size: 12px;
+            font-weight: 600;
+            vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .requested-by-row td {
+            background: #fff;
+            padding: 4px 15px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        /* Teeth Grid - Rigid 2x2 Layout */
+        .teeth-chart {
+            display: table;
+            width: 100%;
+            max-width: 160px;
+            table-layout: fixed;
+            margin: 0 auto;
+            border-collapse: collapse;
+            font-size: 10px;
+            font-weight: 800;
+            background: #fff;
+        }
+        .teeth-row {
+            display: table-row;
+        }
+        .teeth-quad {
+            display: table-cell;
+            width: 50%;
+            height: 30px;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.2;
+            font-size: 10px;
+            font-weight: 800;
+        }
+        /* FDI Cross Borders - Consistent with Reference Image */
+        .teeth-quad.ur { border-right: 2px solid #000; border-bottom: 2px solid #000; }
+        .teeth-quad.ul { border-bottom: 2px solid #000; }
+        .teeth-quad.lr { border-right: 2px solid #000; }
+        .teeth-quad.ll { }
+
+        /* Totals Row */
+        .total-summary-row td {
+            border-top: 2px solid #000;
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        /* Grand Total Box */
+        .grand-total-section {
+            display: flex;
+            border: 2px solid #000;
+            margin-top: 20px;
+            font-weight: 800;
+            font-size: 15px;
+        }
+
+        .words-box {
+            flex: 1.8;
+            padding: 10px;
+            border-right: 2px solid #000;
+        }
+
+        .amount-box {
+            flex: 1;
+            padding: 10px;
+            text-align: right;
+        }
+
+        .authorized-signatory {
+            margin-top: auto;
+            padding-top: 50px;
+            text-align: right;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* Action Buttons */
+        .actions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #fff;
+        }
+
+        .btn-print { background: #000; }
+        .btn-download { background: #2563eb; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+
+        /* Responsive Design */
+        @media screen and (max-width: 900px) {
+            body:not(.html2pdf-printing) { padding: 10px; }
+            .invoice-container:not(.html2pdf-printing-container) {
+                width: 100%;
+                min-height: auto;
+                padding: 8mm;
+            }
+            .invoice-container:not(.html2pdf-printing-container) .header-columns { flex-direction: column; gap: 10px; }
+            .invoice-container:not(.html2pdf-printing-container) .header-left { width: 100%; }
+            .invoice-container:not(.html2pdf-printing-container) .header-right { width: 100%; text-align: left; }
+            .invoice-container:not(.html2pdf-printing-container) .meta-container { flex-direction: column; }
+            .invoice-container:not(.html2pdf-printing-container) .client-box { border-right: none; border-bottom: 2px solid #000; }
+            .invoice-container:not(.html2pdf-printing-container) .grand-total-section { flex-direction: column; }
+            .invoice-container:not(.html2pdf-printing-container) .words-box { border-right: none; border-bottom: 2px solid #000; }
+            .invoice-container:not(.html2pdf-printing-container) .lab-name { font-size: 18px; }
+            .invoice-container:not(.html2pdf-printing-container) .invoice-title { font-size: 16px; }
+            .invoice-container:not(.html2pdf-printing-container) .actions { position: static; flex-direction: row; justify-content: center; margin-bottom: 15px; }
+            .invoice-container:not(.html2pdf-printing-container) .teeth-chart { width: 70px; }
+            .invoice-container:not(.html2pdf-printing-container) .teeth-quad { font-size: 10px; padding: 2px; height: 30px; }
+        }
+
+        @media screen and (max-width: 600px) {
+            .invoice-container:not(.html2pdf-printing-container) { padding: 5mm; }
+            .invoice-container:not(.html2pdf-printing-container) .invoice-table th { font-size: 9px; padding: 4px 2px; }
+            .invoice-container:not(.html2pdf-printing-container) .invoice-table td { font-size: 10px; padding: 4px 3px; }
+            .invoice-container:not(.html2pdf-printing-container) .lab-name { font-size: 15px; }
+            .invoice-container:not(.html2pdf-printing-container) .teeth-chart { width: 55px; }
+            .invoice-container:not(.html2pdf-printing-container) .teeth-quad { font-size: 8px; padding: 1px; height: 22px; }
+        }
+
+        /* Styles for forcing desktop layout during PDF generation */
+        body.html2pdf-printing {
+            width: 210mm !important;
+            min-width: 210mm !important;
+            padding: 0 !important;
+            background: #fff !important;
+            overflow: visible !important;
+        }
+        .invoice-container.html2pdf-printing-container {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 15mm !important;
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        .invoice-container.html2pdf-printing-container .header-columns {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+        }
+        .invoice-container.html2pdf-printing-container .header-left {
+            display: flex !important;
+            flex-direction: row !important;
+            width: 55% !important;
+            gap: 15px !important;
+        }
+        .invoice-container.html2pdf-printing-container .header-right {
+            width: 40% !important;
+            text-align: right !important;
+        }
+        .invoice-container.html2pdf-printing-container .meta-container {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        .invoice-container.html2pdf-printing-container .client-box {
+            border-right: 2px solid #000 !important;
+            border-bottom: none !important;
+        }
+        .invoice-container.html2pdf-printing-container .grand-total-section {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        .invoice-container.html2pdf-printing-container .words-box {
+            border-right: 2px solid #000 !important;
+            border-bottom: none !important;
+        }
+        .invoice-container.html2pdf-printing-container .invoice-table {
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+        .invoice-container.html2pdf-printing-container .invoice-table th {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            font-size: 11px !important;
+            padding: 8px 5px !important;
+        }
+        .invoice-container.html2pdf-printing-container .invoice-table td {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            font-size: 12px !important;
+            padding: 6px 5px !important;
+        }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(1) { width: 3% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(2) { width: 7% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(3) { width: 11% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(4) { width: 11% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(5) { width: 15% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(6) { width: 22% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(7) { width: 7% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(8) { width: 11% !important; }
+        .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(9) { width: 13% !important; }
+
+        @media print {
+            body { padding: 0; background: #fff; }
+            .invoice-container { 
+                box-shadow: none; 
+                border: 1px solid #000;
+                margin: 0;
+                width: 100%;
+            }
+            .actions { display: none; }
+        }
+    </style>
+</head>
+<body class="fade-in">
+
+    <div class="actions">
+        <button class="btn btn-print" onclick="window.print()">PRINT INVOICE</button>
+        <button class="btn btn-download" onclick="downloadPDF()">DOWNLOAD PDF</button>
+    </div>
+
+    <div id="invoice-content" class="invoice-container fade-in">
+        <!-- Header -->
+        <header class="header-section">
+            <h1 class="lab-name">SOHAR DENTAL LABORATORY</h1>
+            <div class="header-columns">
+                <div class="header-left">
+                    <div class="logo-box">
+                        <img src="logo.jpeg" alt="Logo">
+                    </div>
+                    <div class="lab-info">
+                        <div>AL HAMBAR</div>
+                        <div>C.R.NO.3203549</div>
+                        <div>MOH NO. 1771</div>
+                        <div>SOHAR</div>
+                        <div>SULTANATE OF OMAN</div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div>Phone : 99622728, 92501576</div>
+                    <div>email : sohardentallab@gmail.com</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="invoice-title">Invoice</div>
+
+        <!-- Meta Info Box -->
+        <section class="meta-container">
+            <div class="client-box">
+                <div class="client-name" id="clinic-name">...</div>
+                <div class="client-address" id="clinic-address">...</div>
+            </div>
+            <div class="invoice-meta-box">
+                <div class="meta-row">
+                    <span>Invoice #.</span>
+                    <span id="inv-number">...</span>
+                </div>
+                <div class="meta-row">
+                    <span>Date</span>
+                    <span id="inv-date">...</span>
+                </div>
+                <div class="barcode-area">
+                    <img id="barcode-img" src="" alt="Barcode">
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Table -->
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th style="width: 3%;">#</th>
+                    <th style="width: 7%;">Order #</th>
+                    <th style="width: 11%;">Patient</th>
+                    <th style="width: 11%;">Delivery Date</th>
+                    <th style="width: 15%;">Product</th>
+                    <th style="width: 22%;">Teeth #</th>
+                    <th style="width: 7%;">Units</th>
+                    <th style="width: 11%;">Rate /unit</th>
+                    <th style="width: 13%;">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody id="items-body">
+                <!-- Injected via JS -->
+            </tbody>
+            <tfoot>
+                <tr class="total-summary-row">
+                    <td colspan="6" style="text-align: right; font-weight:800; font-size:13px;">Total :</td>
+                    <td id="total-units" style="text-align: center; font-weight:800;">0</td>
+                    <td></td>
+                    <td id="total-amount-val" style="text-align: right; font-weight:800;">0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Grand Total Bar -->
+        <div class="grand-total-section">
+            <div class="words-box">
+                Grand Total : <span id="total-words-val">...</span>
+            </div>
+            <div class="amount-box">
+                OMR : <span id="grand-total-val">0.00</span>
+            </div>
+        </div>
+
+        <div id="signature-area" class="authorized-signatory">Authorized Signatory</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        const urlParams = new URLSearchParams(window.location.search);
+
+        function numberToWords(num) {
+            const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+
+            if (num === 0) return 'Zero';
+
+            function convert(n) {
+                let s = '';
+                if (n >= 100) {
+                    s += ones[Math.floor(n / 100)] + ' Hundred ';
+                    n %= 100;
+                }
+                if (n >= 20) {
+                    s += tens[Math.floor(n / 10)] + ' ';
+                    n %= 10;
+                } else if (n >= 10) {
+                    s += teens[n - 10] + ' ';
+                    n = 0;
+                }
+                if (n > 0) {
+                    s += ones[n] + ' ';
+                }
+                return s;
+            }
+
+            let result = '';
+            if (num >= 1000) {
+                result += convert(Math.floor(num / 1000)) + 'Thousand ';
+                num %= 1000;
+            }
+            result += convert(num);
+            return result.trim() + ' only';
+        }
+
+        function createTeethGrid(selection) {
+            if (!selection || selection.trim() === "") return '';
+            
+            try {
+                const teeth = selection.split(',').map(s => s.trim()).filter(s => s !== "");
+                const quadrants = { 1: [], 2: [], 3: [], 4: [] };
+                
+                teeth.forEach(t => {
+                    const val = parseInt(t);
+                    if (isNaN(val)) return;
+                    let q = Math.floor(val / 10);
+                    const n = val % 10;
+                    
+                    // Map deciduous quadrants (5-8) to permanent quadrants (1-4) for the 2x2 grid
+                    if (q === 5) q = 1;
+                    if (q === 6) q = 2;
+                    if (q === 7) q = 3;
+                    if (q === 8) q = 4;
+
+                    if (quadrants[q]) quadrants[q].push(n);
+                });
+
+                const q1 = quadrants[1].sort((a, b) => b - a).join(',');
+                const q2 = quadrants[2].sort((a, b) => a - b).join(',');
+                const q3 = quadrants[3].sort((a, b) => a - b).join(',');
+                const q4 = quadrants[4].sort((a, b) => b - a).join(',');
+
+
+                return `
+                    <div class="teeth-chart">
+                        <div class="teeth-row">
+                            <div class="teeth-quad ur">${q1}</div>
+                            <div class="teeth-quad ul">${q2}</div>
+                        </div>
+                        <div class="teeth-row">
+                            <div class="teeth-quad lr">${q4}</div>
+                            <div class="teeth-quad ll">${q3}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                console.error("Error creating teeth grid:", e);
+                return selection; // Fallback to raw text
+            }
+        }
+
+        async function init() {
+            const id = urlParams.get('id');
+            const type = urlParams.get('type') || 'invoice';
+            if (!id) return;
+
+            try {
+                let data = {};
+                let orders = [];
+
+                if (type === 'order') {
+                    const res = await fetch(`${API_BASE}/orders/${id}`);
+                    const orderData = await res.json();
+                    data = {
+                        client: orderData.client,
+                        invoiceNumber: 'DRAFT-' + orderData.id,
+                        invoiceDate: new Date(),
+                        netAmount: orderData.totalAmount || orderData.price || 0
+                    };
+                    orders = [orderData];
+                } else {
+                    const res = await fetch(`${API_BASE}/invoices/${id}`);
+                    data = await res.json();
+                    if (!data || data.error) throw new Error(data ? data.error : 'Invoice not found');
+                    
+                    orders = data.orders || [];
+                    
+                    // Fallback: If orders are empty but netAmount > 0, fetch specifically by invoiceId
+                    if (orders.length === 0 && data.netAmount > 0) {
+                        console.log("Orders empty in invoice object, attempting manual recovery via invoiceId...");
+                        const ordersRes = await fetch(`${API_BASE}/orders?invoiceId=${data.id}`);
+                        orders = await ordersRes.json();
+                        console.log(`Recovered ${orders.length} orders manually.`);
+                    }
+                }
+
+                document.getElementById('clinic-name').textContent = data.client ? data.client.name : 'Unknown Clinic';
+                document.getElementById('clinic-address').textContent = data.client ? (data.client.address || 'SOHAR') : 'SOHAR';
+                document.getElementById('inv-number').textContent = data.invoiceNumber;
+                document.getElementById('inv-date').textContent = new Date(data.invoiceDate).toLocaleDateString('en-GB');
+                document.getElementById('barcode-img').src = `https://barcodeapi.org/api/128/${data.invoiceNumber}`;
+                
+                const itemsBody = document.getElementById('items-body');
+                let totalUnits = 0;
+                let computedTotalAmount = 0;
+                let html = '';
+
+                if (orders.length > 0) {
+                    const firstOrder = orders[0];
+                    if (firstOrder.doctorName) {
+                        html += `
+                            <tr class="requested-by-row">
+                                <td></td>
+                                <td colspan="8">Requested by Dr. ${firstOrder.doctorName.toUpperCase()}</td>
+                            </tr>
+                        `;
+                    }
+
+                    orders.forEach((o, idx) => {
+                        const units = o.units || 1;
+                        totalUnits += units;
+                        const price = o.totalAmount || o.price || 0;
+                        computedTotalAmount += price;
+                        const rate = price / units;
+
+                        html += `
+                            <tr>
+                                <td style="text-align:center;">${idx + 1}</td>
+                                <td>${o.orderNumber || o.id}</td>
+                                <td>${o.patientName}</td>
+                                <td style="text-align:center;">${o.finishDate ? new Date(o.finishDate).toLocaleDateString('en-GB') : (o.dueDate ? new Date(o.dueDate).toLocaleDateString('en-GB') : '')}</td>
+                                <td>
+                                    ${o.productName || o.productType}
+                                    ${(o.shade1 || o.shade2 || o.shade3) ? `<br/><small style="font-size:10px; color:#444;">Shade: ${[o.shade1, o.shade2, o.shade3].filter(s => s).join(' / ')}</small>` : ''}
+                                </td>
+                                <td style="padding: 0 !important;">${createTeethGrid(o.teethSelection)}</td>
+                                <td style="text-align:center;">${units}</td>
+                                <td style="text-align:right;">${rate.toFixed(2)}</td>
+                                <td style="text-align:right;">${price.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    html = '<tr><td colspan="9" style="text-align:center; padding:20px;">No items found.</td></tr>';
+                }
+                
+                itemsBody.innerHTML = html;
+                document.getElementById('total-units').textContent = totalUnits;
+                document.getElementById('total-amount-val').textContent = computedTotalAmount.toFixed(2);
+                document.getElementById('grand-total-val').textContent = computedTotalAmount.toFixed(2);
+                
+                const amountInt = Math.floor(computedTotalAmount);
+                document.getElementById('total-words-val').textContent = 'OMR ' + numberToWords(amountInt);
+
+            } catch (err) { console.error('Error rendering invoice:', err); }
+        }
+
+        async function downloadPDF() {
+            document.body.classList.add('html2pdf-printing');
+            const element = document.getElementById('invoice-content');
+            element.classList.add('html2pdf-printing-container');
+            const invNum = document.getElementById('inv-number').textContent;
+            
+            const opt = {
+                margin: 0,
+                filename: `Invoice_${invNum}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } catch (err) {
+                console.error("PDF generation failed:", err);
+                alert("Failed to download PDF. Please try printing instead.");
+            } finally {
+                element.classList.remove('html2pdf-printing-container');
+                document.body.classList.remove('html2pdf-printing');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

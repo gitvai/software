@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Command | Clients</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-section" style="text-decoration: none;">
+            <img src="logo.jpeg" alt="SOHAR DENTAL LAB" style="height: 45px; object-fit: contain;">
+            <span>SOHAR DENTAL LAB</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">HOME</a>
+            <a href="clients.html" class="active">CLIENTS</a>
+            <a href="orders.html">ORDERS</a>
+            <a href="shipments.html">SHIPMENTS</a>
+            <a href="accounts.html">ACCOUNTS</a>
+            <a href="office.html">OFFICE</a>
+            <a href="reports.html">REPORTS</a>
+        </nav>
+
+    </header>
+
+    <div class="main-container">
+        <aside>
+            <div class="sidebar-section">
+                <div class="quick-actions">
+                    <button class="btn-action active-filter" onclick="showSection('details')">
+                        <i class="fas fa-address-card"></i> Details
+                    </button>
+                    <button class="btn-action" onclick="showSection('orders')">
+                        <i class="fas fa-clipboard-list"></i> Orders
+                    </button>
+                    <button class="btn-action" onclick="showSection('shipments')">
+                        <i class="fas fa-truck"></i> Shipments
+                    </button>
+                    <button class="btn-action" onclick="showSection('bills')">
+                        <i class="fas fa-file-invoice-dollar"></i> Bills
+                    </button>
+                    <button class="btn-action" onclick="showSection('collections')">
+                        <i class="fas fa-money-check-alt"></i> Collections
+                    </button>
+                    <button class="btn-action primary" onclick="showAddClientModal()">
+                        <i class="fas fa-user-plus"></i> New Clients
+                    </button>
+                    <button class="btn-action" onclick="showSection('messages')">
+                        <i class="fas fa-envelope"></i> Messages
+                    </button>
+                    <button class="btn-action" onclick="showSection('documents')">
+                        <i class="fas fa-folder-open"></i> Documents
+                    </button>
+                </div>
+            </div>
+
+            <!-- Backup & Export -->
+            <div class="sidebar-section" style="margin-top:20px;">
+                <h3
+                    style="color:#6b7280; font-size:11px; text-transform:uppercase; margin-bottom:15px; letter-spacing:0.05em;">
+                    Backup & Export</h3>
+                <div class="quick-actions" style="display:grid; gap:10px;">
+                    <button class="btn-action"
+                        style="background:#1f2937; color:#fff; border:none; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px; font-weight:600; width:100%; cursor:pointer;"
+                        onclick="window.location.href='http://localhost:5000/api/backup/system'">
+                        <i class="fas fa-file-archive"></i> System Backup (.zip)
+                    </button>
+                    <button class="btn-action"
+                        style="background:#fff; border:1px solid #e5e7eb; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px; font-weight:600; width:100%; cursor:pointer; color:#1f2937;"
+                        onclick="showExportModal()">
+                        <i class="fas fa-file-export"></i> Export Data
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="fade-in">
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Clients</h1>
+                </div>
+            </div>
+
+            <!-- Quick Search Bar -->
+            <div class="card" style="margin-bottom: 20px; padding: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: var(--accent-pink); font-weight: 700; font-size: 14px;">Quick Search</span>
+                    <input type="text" placeholder="Name / Code / Cell / Email" id="client-search" oninput="searchClients()" style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; outline: none;">
+                    <button class="btn-action" style="padding: 8px 12px;" onclick="searchClients()"><i class="fas fa-search"></i></button>
+                    <button class="btn-action primary" onclick="showAddClientModal()"><i class="fas fa-plus"></i> New Client</button>
+                </div>
+            </div>
+
+            <!-- Details Section (Default) -->
+            <div class="card section-content" id="section-details">
+                <div class="card-header" style="background:#f9fafb; margin-bottom:0; border-bottom:1px solid #ddd; padding:10px 20px;">
+                    <h3 style="font-size:14px; color:var(--primary-blue);">Advanced Client Search</h3>
+                </div>
+                <div style="padding:20px; border-bottom:1px solid #ddd; background:#fff;">
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <select id="adv-search-criterion" style="padding:5px; border:1px solid #ccc;">
+                            <option value="name">Name</option>
+                            <option value="contactPerson">Contact Person</option>
+                            <option value="code">Code</option>
+                            <option value="createdAt">Registration Date</option>
+                            <option value="address">Street Address</option>
+                            <option value="city">City</option>
+                            <option value="pinCode">Pin Code</option>
+                            <option value="phone">Office Phone</option>
+                            <option value="cellPhone">Cell</option>
+                            <option value="phone2">Res Phone</option>
+                            <option value="email">Email</option>
+                            <option value="creditLimit">Credit Limit</option>
+                            <option value="paymentTermsDays">PaymentTerms</option>
+                            <option value="notes">Notes</option>
+                            <option value="categories">Category</option>
+                            <option value="priceBand">Price Band</option>
+                            <option value="deliveryMethod">Delivery Method</option>
+                            <option value="salutation">Salutation</option>
+                        </select>
+                        <input type="text" id="adv-search-value" placeholder="Enter value..." style="padding:5px; border:1px solid #ccc; width:200px;">
+                        <button class="btn-action" style="padding:2px 8px; font-weight:700;" onclick="clearAdvSearch()">-</button>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <a href="#" style="color:var(--accent-pink); font-size:12px; text-decoration:none; font-weight:700;">+ Add Search Criterion</a>
+                    </div>
+                    <div style="margin-top:15px; display:flex; gap:10px;">
+                        <button class="btn-action" onclick="performAdvancedSearch()" style="color:#3b82f6;">Search</button>
+                        <button class="btn-action primary" onclick="showAddClientModal()">+ New Client</button>
+                    </div>
+                </div>
+                <table id="clients-table">
+                    <thead>
+                        <tr>
+                            <th>Sr</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                            <th>Code</th>
+                            <th>Office Phone</th>
+                            <th>Cell Phone</th>
+                            <th>City</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading clients...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Orders Section -->
+            <div class="card section-content" id="section-orders" style="display:none;">
+                <div class="card-header"><h2>Client Orders</h2></div>
+                <p style="color: var(--text-muted); padding: 20px;">Select a client from the Details tab to view their orders.</p>
+            </div>
+
+            <!-- Shipments Section -->
+            <div class="card section-content" id="section-shipments" style="display:none;">
+                <div class="card-header"><h2>Client Shipments</h2></div>
+                <p style="color: var(--text-muted); padding: 20px;">Select a client from the Details tab to view their shipments.</p>
+            </div>
+
+            <!-- Bills Section -->
+            <div class="card section-content" id="section-bills" style="display:none;">
+                <div class="card-header"><h2>Client Bills / Invoices</h2></div>
+                <p style="color: var(--text-muted); padding: 20px;">Select a client from the Details tab to view their invoices.</p>
+            </div>
+
+            <!-- Collections Section -->
+            <div class="card section-content" id="section-collections" style="display:none;">
+                <div class="card-header"><h2>Client Collections / Receipts</h2></div>
+                <p style="color: var(--text-muted); padding: 20px;">Select a client from the Details tab to view their receipts.</p>
+            </div>
+
+            <!-- Messages Section -->
+            <div class="card section-content" id="section-messages" style="display:none;">
+                <div class="card-header"><h2>Messages</h2></div>
+                <p style="color: var(--text-muted); padding: 20px;">No messages to display.</p>
+            </div>
+
+            <!-- Documents Section -->
+            <div class="card section-content" id="section-documents" style="display:none;">
+                <div class="card-header"><h2>Documents</h2></div>
+                <p style="color: var(--text-muted); padding: 20px;">No documents uploaded.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- New Client Modal (Expanded) -->
+    <div id="add-client-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:2000; align-items:center; justify-content:center; padding:20px;">
+        <div class="card" style="max-width:950px; width:100%; max-height:95vh; overflow-y:auto; overflow-x:hidden; background:#fff; border-radius:8px; box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+            <div class="card-header" style="background:#fff; border-bottom:1px solid #eee; padding:15px 25px; display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="modal-title" style="color:var(--primary-blue); font-size:20px; font-weight:700; margin:0;">New Client</h2>
+                <button type="button" onclick="closeModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:#999; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#999'">×</button>
+            </div>
+            <form id="add-client-form" style="padding:20px; font-size:13px;">
+                <!-- Top Header Fields -->
+                <div style="display:grid; grid-template-columns: 0.8fr 1.5fr 1fr 1.2fr; gap:15px; margin-bottom:15px; box-sizing: border-box;">
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Salutation</label>
+                        <select id="nc-salutation" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                            <option value=""></option>
+                            <option>Dr.</option>
+                            <option>Mr.</option>
+                            <option>Ms.</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Name *</label>
+                        <input type="text" id="nc-name" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Contact Person</label>
+                        <input type="text" id="nc-contact" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Doctor Name</label>
+                        <select id="nc-doctor" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;" onchange="handleDoctorChange(this)">
+                            <option value="">-- Select Doctor --</option>
+                            <option value="__add_new__" style="font-weight:bold; color:#3b82f6;">+ Add New Doctor...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 0.8fr 1.5fr 1fr 1.2fr; gap:15px; margin-bottom:20px; box-sizing: border-box;">
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Code</label>
+                        <input type="text" id="nc-code" readonly style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; background:#f9fafb; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Reg. #</label>
+                        <input type="text" id="nc-reg" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Working Hours</label>
+                        <input type="text" id="nc-hours" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label style="display:block; margin-bottom:4px; font-weight:600;">Sales Manager</label>
+                        <select id="nc-manager" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                            <option>Select ...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 3fr 2fr; gap:40px; border-top: 1px solid #eee; padding-top:20px;">
+                    <!-- Left Column -->
+                    <div>
+                        <div style="display:flex; gap:2px; margin-bottom:15px;">
+                            <button type="button" style="background:var(--accent-pink); color:white; border:none; padding:8px 20px; border-radius:4px 0 0 4px; font-weight:600;">Primary Address</button>
+                            <button type="button" style="background:#f3f4f6; border:1px solid #e5e7eb; padding:8px 20px; border-radius:0 4px 4px 0; font-weight:600; color:#4b5563;">Locations</button>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label style="display:block; margin-bottom:4px; font-weight:600;">Address Line 1</label>
+                            <input type="text" id="nc-address1" placeholder="Building/Street" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label style="display:block; margin-bottom:4px; font-weight:600;">Address Line 2</label>
+                            <input type="text" id="nc-address2" placeholder="Locality/Landmark" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
+                            <div>
+                                <label style="display:block; margin-bottom:4px; font-weight:600;">Area</label>
+                                <input type="text" id="nc-area" placeholder="Area" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:4px; font-weight:600;">City</label>
+                                <input type="text" id="nc-city" placeholder="City" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:4px; font-weight:600;">Pin Code</label>
+                                <input type="text" id="nc-pincode" placeholder="Pin Code" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Office Phone</label>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                <input type="text" id="nc-phone1" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                <input type="text" id="nc-phone2" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Cell Phone</label>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                <input type="text" id="nc-cell1" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                <input type="text" id="nc-cell2" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Email</label>
+                            <div style="display:flex; gap:10px;">
+                                <input type="email" id="nc-email" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                <button type="button" class="btn-action primary" style="padding:0 15px; background:var(--accent-pink); border:none; border-radius:4px; color:white;"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                        
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#4b5563;">
+                            <input type="checkbox" style="width:16px; height:16px;"> Send Welcome Message
+                        </label>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; align-content: start;">
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Delivery Method</label>
+                            <select id="nc-delivery" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <option value=""></option>
+                                <option>LOGISTICS TEAM</option>
+                                <option>Courier</option>
+                                <option>Delivery Boy</option>
+                                <option>Doctors Pickup</option>
+                                <option>Mail</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Route</label>
+                            <select id="nc-route" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <option value="Default">Default</option>
+                                <option>Sohar</option>
+                                <option>Muscat</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Default Delivery Agent</label>
+                            <select id="nc-delivery-agent" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <option value=""></option>
+                                <option>SADDAM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Collection Centre</label>
+                            <select id="nc-collection-centre" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <option value=""></option>
+                                <option>Main Lab</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2; border-top:1px solid #f3f4f6; padding-top:10px;">
+                            <label style="display:block; margin-bottom:8px; font-weight:600;">Regular Visits</label>
+                            <div style="display:flex; gap:15px; align-items:center; flex-wrap: wrap;">
+                                <div style="display:flex; align-items:center; gap:5px;">
+                                    <input type="checkbox" id="visit-enabled"> 
+                                    <input type="time" id="visit-time" style="padding:4px; border:1px solid #ccc; border-radius:4px;">
+                                </div>
+                                <div style="display:flex; gap:8px; font-size:12px;">
+                                    <label><input type="checkbox" class="visit-day" value="Su"> Su</label>
+                                    <label><input type="checkbox" class="visit-day" value="Mo"> Mo</label>
+                                    <label><input type="checkbox" class="visit-day" value="Tu"> Tu</label>
+                                    <label><input type="checkbox" class="visit-day" value="We"> We</label>
+                                    <label><input type="checkbox" class="visit-day" value="Th"> Th</label>
+                                    <label><input type="checkbox" class="visit-day" value="Fr"> Fr</label>
+                                    <label><input type="checkbox" class="visit-day" value="Sa"> Sa</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Price Band</label>
+                            <select id="nc-priceband" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <option>Regular</option>
+                                <option>Favorite Clients</option>
+                                <option>International</option>
+                                <option>Laboratory</option>
+                                <option>Out of State</option>
+                                <option>PFM-7</option>
+                                <option>RPD 3+1</option>
+                                <option>Sensitive</option>
+                                <option>ZIRCON 8</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Tax ID</label>
+                            <input type="text" id="nc-taxid" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2; display:flex; gap:30px; margin: 5px 0;">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="nc-tax-exemption" style="width:16px; height:16px;"> Tax Exemption
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="nc-is-dental-lab" style="width:16px; height:16px;"> This is a Dental Lab
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Credit Limit</label>
+                            <input type="number" id="nc-credit" value="0" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Payment Terms (Days)</label>
+                            <input type="number" id="nc-terms" value="0" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                        
+                        <div class="form-group" style="grid-column: span 2; border-top:1px solid #f3f4f6; padding-top:10px;">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Opening Balance</label>
+                            <div style="display:flex; gap:20px; align-items:center;">
+                                <input type="number" id="nc-openbal" value="0" style="width:120px; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <div style="display:flex; gap:15px;">
+                                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="baltype" value="Dr" checked> Dr</label>
+                                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="baltype" value="Cr"> Cr</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2; display:flex; align-items:center; gap:15px; border-top:1px solid #f3f4f6; padding-top:10px;">
+                            <label style="font-weight:600;">Bill To:</label>
+                            <span id="nc-bill-to-display" style="color:#3b82f6; font-weight:700; cursor:pointer; text-decoration:underline;">Self</span>
+                            <i class="fas fa-info-circle" style="color:#3b82f6; cursor:help;"></i>
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Categories</label>
+                            <select id="nc-categories" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                <option value=""></option>
+                                <option>Regular</option>
+                                <option>Favorite</option>
+                                <option>Price Conscious</option>
+                                <option>VIP</option>
+                                <option>Balance Amount</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label style="display:block; margin-bottom:5px; font-weight:600;">Notes</label>
+                            <textarea id="nc-notes" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; height:60px; resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center; margin-top:30px; border-top:1px solid #ddd; padding-top:20px;">
+                    <button id="btn-delete-client" type="button" class="btn-action" style="background:none; border:1px solid #ec4899; color:#ec4899; padding:8px 15px; border-radius:4px;" onclick="deleteClient()"><i class="fas fa-trash-alt"></i> Delete</button>
+                    <div style="flex:1;"></div>
+                    <button type="button" class="btn-action" style="background:none; color:#3b82f6; border:none; font-weight:600; display:flex; align-items:center; gap:5px;" onclick="saveClient(true)"><i class="fas fa-plus"></i> Save and New Order</button>
+                    <button type="submit" class="btn-action" style="background:#3b82f6; color:white; border:none; padding:8px 25px; border-radius:4px; font-weight:600; display:flex; align-items:center; gap:5px;"><i class="fas fa-check"></i> Save</button>
+                    <button type="button" class="btn-action" style="background:none; color:#3b82f6; border:none; font-weight:600; display:flex; align-items:center; gap:5px;" onclick="closeModal()"><i class="fas fa-undo"></i> Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let allClients = [];
+        let editingClientId = null;
+
+        function showSection(name) {
+            document.querySelectorAll('.section-content').forEach(el => el.style.display = 'none');
+            const target = document.getElementById('section-' + name);
+            if (target) target.style.display = 'block';
+            
+            document.querySelectorAll('.quick-actions .btn-action').forEach(btn => {
+                btn.classList.remove('active-filter');
+                if (btn.getAttribute('onclick')?.includes(`'${name}'`)) {
+                    btn.classList.add('active-filter');
+                }
+            });
+        }
+
+        function showAddClientModal() {
+            editingClientId = null;
+            document.getElementById('add-client-form').reset();
+            document.getElementById('modal-title').textContent = 'New Client';
+            document.getElementById('btn-delete-client').style.display = 'none';
+            document.getElementById('add-client-modal').style.display = 'flex';
+            const nextCode = (allClients.length + 1).toString().padStart(5, '0');
+            document.getElementById('nc-code').value = nextCode;
+        }
+
+        function editClient(id) {
+            const client = allClients.find(c => c.id == id);
+            if (!client) return;
+
+            editingClientId = id;
+            document.getElementById('modal-title').textContent = 'Edit Client';
+            document.getElementById('btn-delete-client').style.display = 'block';
+            document.getElementById('add-client-modal').style.display = 'flex';
+
+            // Populate fields
+            document.getElementById('nc-salutation').value = client.salutation || '';
+            document.getElementById('nc-name').value = client.name || '';
+            document.getElementById('nc-code').value = client.code || '';
+            document.getElementById('nc-contact').value = client.contactPerson || '';
+            document.getElementById('nc-doctor').value = client.doctorName || '';
+            document.getElementById('nc-reg').value = client.regNum || '';
+            document.getElementById('nc-hours').value = client.workingHours || '';
+            document.getElementById('nc-address1').value = client.address || '';
+            document.getElementById('nc-address2').value = client.address2 || '';
+            document.getElementById('nc-area').value = client.area || '';
+            document.getElementById('nc-city').value = client.city || '';
+            document.getElementById('nc-pincode').value = client.pinCode || '';
+            document.getElementById('nc-phone1').value = client.phone || '';
+            document.getElementById('nc-phone2').value = client.phone2 || '';
+            document.getElementById('nc-cell1').value = client.cellPhone || '';
+            document.getElementById('nc-cell2').value = client.cellPhone2 || '';
+            document.getElementById('nc-email').value = client.email || '';
+            document.getElementById('nc-delivery').value = client.deliveryMethod || '';
+            document.getElementById('nc-route').value = client.route || 'Default';
+            document.getElementById('nc-delivery-agent').value = client.defaultDeliveryAgent || '';
+            document.getElementById('nc-collection-centre').value = client.collectionCentre || '';
+            document.getElementById('nc-priceband').value = client.priceBand || 'Regular';
+            document.getElementById('nc-taxid').value = client.taxId || '';
+            document.getElementById('nc-tax-exemption').checked = client.taxExemption || false;
+            document.getElementById('nc-is-dental-lab').checked = client.isDentalLab || false;
+            document.getElementById('nc-credit').value = client.creditLimit || 0;
+            document.getElementById('nc-terms').value = client.paymentTermsDays || 0;
+            document.getElementById('nc-openbal').value = client.openingBalance || 0;
+            const balType = client.openingBalanceType || 'Dr';
+            document.querySelector(`input[name="baltype"][value="${balType}"]`).checked = true;
+            document.getElementById('nc-bill-to-display').textContent = client.billTo || 'Self';
+            document.getElementById('nc-categories').value = client.categories || '';
+            document.getElementById('nc-notes').value = client.notes || '';
+
+            if (client.regularVisits) {
+                const rv = typeof client.regularVisits === 'string' ? JSON.parse(client.regularVisits) : client.regularVisits;
+                document.getElementById('visit-enabled').checked = rv.enabled || false;
+                document.getElementById('visit-time').value = rv.time || '';
+                const days = rv.days || [];
+                document.querySelectorAll('.visit-day').forEach(cb => {
+                    cb.checked = days.includes(cb.value);
+                });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('add-client-modal').style.display = 'none';
+            editingClientId = null;
+        }
+
+        function performAdvancedSearch() {
+            const criterion = document.getElementById('adv-search-criterion').value;
+            const value = document.getElementById('adv-search-value').value.toLowerCase();
+            
+            if (!value) {
+                renderClients(allClients);
+                return;
+            }
+
+            const filtered = allClients.filter(c => {
+                const val = (c[criterion] || '').toString().toLowerCase();
+                return val.includes(value);
+            });
+            renderClients(filtered);
+        }
+
+        function clearAdvSearch() {
+            document.getElementById('adv-search-value').value = '';
+            renderClients(allClients);
+        }
+
+        function searchClients() {
+            const query = document.getElementById('client-search').value.toLowerCase();
+            const filtered = allClients.filter(c => 
+                (c.name || '').toLowerCase().includes(query) ||
+                (c.code || '').toLowerCase().includes(query) ||
+                (c.cellPhone || '').toLowerCase().includes(query) ||
+                (c.email || '').toLowerCase().includes(query)
+            );
+            renderClients(filtered);
+        }
+
+        function renderClients(clients) {
+            const tableBody = document.querySelector('#clients-table tbody');
+            if (clients && clients.length > 0) {
+                tableBody.innerHTML = '';
+                clients.forEach((client, idx) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${idx + 1}</td>
+                        <td><a href="shipments.html?clientId=${client.id}" style="color:#3b82f6; text-decoration:none; font-weight:600;">${client.name}</a></td>
+                        <td style="display:flex; gap:8px;">
+                            <a href="orders.html?clientId=${client.id}"><i class="fas fa-list-alt" style="color:#3b82f6; cursor:pointer;" title="Details"></i></a>
+                            <i class="fas fa-money-bill-alt" style="color:#3b82f6; cursor:pointer;" title="Billing"></i>
+                            <i class="fas fa-users" style="color:#3b82f6; cursor:pointer;" title="Contacts"></i>
+                            <i class="fas fa-user" style="color:#3b82f6; cursor:pointer;" title="Users"></i>
+                        </td>
+                        <td>${client.code || 'N/A'}</td>
+                        <td>${client.phone || ''}</td>
+                        <td>${client.cellPhone || ''}</td>
+                        <td>${client.city || ''}</td>
+                        <td>${client.email || ''}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No clients found</td></tr>';
+            }
+        }
+
+        async function loadClients() {
+            try {
+                const response = await fetch(`${API_BASE}/clients`);
+                allClients = await response.json();
+                renderClients(allClients);
+                populateRoutes();
+                populateDoctors();
+            } catch (err) { console.error(err); }
+        }
+
+        function populateRoutes() {
+            const routeSelect = document.getElementById('nc-route');
+            if (!routeSelect) return;
+            
+            // Extract unique cities from allClients
+            const cities = [...new Set(allClients.map(c => c.city).filter(c => c))];
+            
+            routeSelect.innerHTML = '<option value="Default">Default</option>';
+            cities.forEach(city => {
+                const opt = document.createElement('option');
+                opt.value = city;
+                opt.textContent = city;
+                routeSelect.appendChild(opt);
+            });
+        }
+
+        function populateDoctors() {
+            const select = document.getElementById('nc-doctor');
+            if (!select) return;
+            const uniqueDoctors = [...new Set(allClients.map(c => c.doctorName).filter(d => d))];
+            
+            const defaultOptions = `
+                <option value="">-- Select Doctor --</option>
+                <option value="__add_new__" style="font-weight:bold; color:#3b82f6;">+ Add New Doctor...</option>
+            `;
+            select.innerHTML = defaultOptions;
+            
+            uniqueDoctors.forEach(doc => {
+                const opt = document.createElement('option');
+                opt.value = doc;
+                opt.textContent = doc;
+                select.insertBefore(opt, select.querySelector('option[value="__add_new__"]'));
+            });
+        }
+
+        function handleDoctorChange(select) {
+            if (select.value === '__add_new__') {
+                const newDoctor = prompt("Enter new doctor's name:");
+                if (newDoctor && newDoctor.trim() !== '') {
+                    const opt = document.createElement('option');
+                    opt.value = newDoctor.trim();
+                    opt.textContent = newDoctor.trim();
+                    select.insertBefore(opt, select.querySelector('option[value="__add_new__"]'));
+                    select.value = newDoctor.trim();
+                } else {
+                    select.value = "";
+                }
+            }
+        }
+
+        async function viewClientDetail(id) {
+            const client = allClients.find(c => c.id === id);
+            if (!client) return;
+
+            // Show orders for this client
+            const ordersSection = document.getElementById('section-orders');
+            const clientOrders = client.orders || [];
+            let html = `<div class="card-header"><h2>Orders for ${client.name}</h2></div>`;
+            if (clientOrders.length > 0) {
+                clientOrders.forEach(o => {
+                    const shipNum = o.shipmentNote ? o.shipmentNote.noteNumber : (o.shipmentNoteId || '-');
+                    const orderNum = o.orderNumber || o.id;
+                    html += `<tr><td><a href="orders.html?editOrder=${o.id}" style="color:#3b82f6; text-decoration:none; font-weight:700;">${orderNum}</a></td><td>${o.patientName || 'N/A'}</td><td>${o.productName || o.productType || 'N/A'}</td><td><span class="status-badge">${o.status}</span></td><td style="color:#10b981; font-weight:700;">${shipNum}</td><td>${o.dueDate ? new Date(o.dueDate).toLocaleDateString() : 'N/A'}</td></tr>`;
+                });
+                html += '</tbody></table>';
+            } else {
+                html += '<p style="padding:20px; color:var(--text-muted);">No orders for this client.</p>';
+            }
+            ordersSection.innerHTML = html;
+
+            // Show invoices for this client
+            const billsSection = document.getElementById('section-bills');
+            const clientInvoices = client.invoices || [];
+            let bhtml = `<div class="card-header"><h2>Invoices for ${client.name}</h2></div>`;
+            if (clientInvoices.length > 0) {
+                bhtml += '<table><thead><tr><th>Invoice#</th><th>Date</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+                clientInvoices.forEach(inv => {
+                    bhtml += `<tr><td>${inv.invoiceNumber}</td><td>${new Date(inv.invoiceDate).toLocaleDateString()}</td><td>${inv.netAmount}</td><td>${inv.paidAmount}</td><td>${inv.balanceAmount}</td><td>${inv.status}</td><td><i class="fas fa-print" style="color:#3b82f6; cursor:pointer;" onclick="downloadInvoicePDF(${inv.id})"></i></td></tr>`;
+                });
+                bhtml += '</tbody></table>';
+            } else {
+                bhtml += '<p style="padding:20px; color:var(--text-muted);">No invoices for this client.</p>';
+            }
+            billsSection.innerHTML = bhtml;
+
+            // Show receipts for this client
+            const collectionsSection = document.getElementById('section-collections');
+            const clientReceipts = client.receipts || [];
+            let rhtml = `<div class="card-header"><h2>Receipts for ${client.name}</h2></div>`;
+            if (clientReceipts.length > 0) {
+                rhtml += '<table><thead><tr><th>Receipt#</th><th>Date</th><th>Amount</th><th>Mode</th></tr></thead><tbody>';
+                clientReceipts.forEach(r => {
+                    rhtml += `<tr><td>${r.receiptNumber}</td><td>${new Date(r.receiptDate).toLocaleDateString()}</td><td>${r.amount}</td><td>${r.paymentMode || 'N/A'}</td></tr>`;
+                });
+                rhtml += '</tbody></table>';
+            } else {
+                rhtml += '<p style="padding:20px; color:var(--text-muted);">No receipts for this client.</p>';
+            }
+            collectionsSection.innerHTML = rhtml;
+            
+            alert(`Viewing details for: ${client.name}. Use sidebar tabs (Orders, Bills, Collections) to see related data.`);
+        }
+
+        function downloadInvoicePDF(id) {
+            window.location.href = `${API_BASE}/invoices/${id}/pdf`;
+        }
+
+        // Update form submit handler
+        document.getElementById('add-client-form').onsubmit = async (e) => {
+            e.preventDefault();
+            await saveClient(false);
+        };
+
+        async function deleteClient() {
+            if (!editingClientId) return;
+            if (!confirm('Are you sure you want to delete this client? This will delete all associated data.')) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/clients/${editingClientId}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error('Failed to delete client');
+                alert('Client deleted successfully!');
+                closeModal();
+                loadClients();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function saveClient(andNewOrder) {
+            const data = {
+                salutation: document.getElementById('nc-salutation').value,
+                name: document.getElementById('nc-name').value,
+                code: document.getElementById('nc-code').value,
+                contactPerson: document.getElementById('nc-contact').value,
+                doctorName: document.getElementById('nc-doctor').value,
+                regNum: document.getElementById('nc-reg').value,
+                workingHours: document.getElementById('nc-hours').value,
+                address: document.getElementById('nc-address1').value,
+                address2: document.getElementById('nc-address2').value,
+                area: document.getElementById('nc-area').value,
+                city: document.getElementById('nc-city').value,
+                pinCode: document.getElementById('nc-pincode').value,
+                phone: document.getElementById('nc-phone1').value,
+                phone2: document.getElementById('nc-phone2').value,
+                cellPhone: document.getElementById('nc-cell1').value,
+                cellPhone2: document.getElementById('nc-cell2').value,
+                email: document.getElementById('nc-email').value,
+                deliveryMethod: document.getElementById('nc-delivery').value,
+                route: document.getElementById('nc-route').value,
+                defaultDeliveryAgent: document.getElementById('nc-delivery-agent').value,
+                collectionCentre: document.getElementById('nc-collection-centre').value,
+                regularVisits: JSON.stringify({
+                    enabled: document.getElementById('visit-enabled').checked,
+                    time: document.getElementById('visit-time').value,
+                    days: Array.from(document.querySelectorAll('.visit-day:checked')).map(cb => cb.value)
+                }),
+                priceBand: document.getElementById('nc-priceband').value,
+                taxId: document.getElementById('nc-taxid').value,
+                taxExemption: document.getElementById('nc-tax-exemption').checked,
+                isDentalLab: document.getElementById('nc-is-dental-lab').checked,
+                creditLimit: Number(document.getElementById('nc-credit').value),
+                paymentTermsDays: Number(document.getElementById('nc-terms').value),
+                openingBalance: Number(document.getElementById('nc-openbal').value),
+                openingBalanceType: document.querySelector('input[name="baltype"]:checked').value,
+                billTo: document.getElementById('nc-bill-to-display').textContent,
+                categories: document.getElementById('nc-categories').value,
+                notes: document.getElementById('nc-notes').value
+            };
+
+            try {
+                const method = editingClientId ? 'PUT' : 'POST';
+                const url = editingClientId ? `${API_BASE}/clients/${editingClientId}` : `${API_BASE}/clients`;
+
+                const res = await fetch(url, { 
+                    method: method, 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(data) 
+                });
+                
+                if (res.ok) {
+                    const client = await res.json();
+                    closeModal();
+                    loadClients();
+                    if (andNewOrder) {
+                        location.href = `new-order.html?clientId=${client.id}`;
+                    } else {
+                        alert(editingClientId ? 'Client updated successfully!' : 'Client created successfully!');
+                    }
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + err.error);
+                }
+            } catch (err) { alert('Connection error'); }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadClients();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'new') {
+                showAddClientModal();
+            }
+            const editId = urlParams.get('editId');
+            if (editId) {
+                editClient(editId);
+            }
+        });
+    </script>
+</body>
+</html>
