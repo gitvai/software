@@ -1543,13 +1543,13 @@
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${index + 1}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee; font-weight:500; color:#1e3a8a;">${item.name} (${item.unit})</td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.quantity}" min="0.01" step="0.01" style="width:65px; padding:4px;" oninput="updateInwardItem(${item.materialId}, 'quantity', this.value)">
+                            <input type="number" value="${item.quantity}" min="0.01" step="0.01" style="width:65px; padding:4px;" onchange="updateInwardItem(${item.materialId}, 'quantity', this.value)">
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.rate}" min="0" step="0.01" style="width:80px; padding:4px;" oninput="updateInwardItem(${item.materialId}, 'rate', this.value)">
+                            <input type="number" value="${item.rate}" min="0" step="0.01" style="width:80px; padding:4px;" onchange="updateInwardItem(${item.materialId}, 'rate', this.value)">
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.taxPercent}" min="0" max="100" step="1" style="width:60px; padding:4px;" oninput="updateInwardItem(${item.materialId}, 'taxPercent', this.value)">
+                            <input type="number" value="${item.taxPercent}" min="0" max="100" step="1" style="width:60px; padding:4px;" onchange="updateInwardItem(${item.materialId}, 'taxPercent', this.value)">
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:right; font-weight:600;">₹${itemTotal.toFixed(2)}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">
@@ -1762,7 +1762,7 @@
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${index + 1}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee; font-weight:500; color:#1e3a8a;">${item.name} (${item.unit})</td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.quantity}" min="0.01" max="${item.maxStock}" step="0.01" style="width:80px; padding:4px;" oninput="updateOutwardItem(${item.materialId}, this.value)">
+                            <input type="number" value="${item.quantity}" min="0.01" max="${item.maxStock}" step="0.01" style="width:80px; padding:4px;" onchange="updateOutwardItem(${item.materialId}, this.value)">
                             <span style="font-size:11px; color:#6b7280; margin-left:5px;">(Max: ${item.maxStock})</span>
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">
