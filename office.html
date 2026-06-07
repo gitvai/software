@@ -134,6 +134,7 @@
         }
     </style>
     <script src="transitions.js"></script>
+    <!-- Cache buster 1780827700836 -->
 </head>
 <body>
     <header>
@@ -1939,7 +1940,7 @@
                 <h3 id="prod-modal-title" style="margin:0;">Add New Product</h3>
                 <button onclick="closeModal('product-modal')" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
             </div>
-            <form onsubmit="saveProduct(event)">
+            <form id="product-form" onsubmit="saveProduct(event)">
                 <input type="hidden" id="prod-id">
                 <div style="margin-bottom:15px;">
                     <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">Product Name</label>
