@@ -123,7 +123,7 @@
                 <div class="quick-actions" style="display:grid; gap:10px;">
                     <button class="btn-action"
                         style="background:#1f2937; color:#fff; border:none; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px; font-weight:600; width:100%; cursor:pointer;"
-                        onclick="window.location.href='http://localhost:5000/api/backup/system'">
+                        onclick="window.location.href='/api/backup/system'">
                         <i class="fas fa-file-archive"></i> System Backup (.zip)
                     </button>
                     <button class="btn-action"
@@ -338,11 +338,6 @@
     </div>
 
     <script>
-        // Redirect to server if opened via file://
-        if (window.location.protocol === 'file:') {
-            window.location.href = 'http://127.0.0.1:5000/index.html';
-        }
-
         const API_BASE = 'http://localhost:5000/api';
 
         async function fetchData(endpoint) {

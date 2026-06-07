@@ -32,22 +32,22 @@
         <aside style="width: 200px; background: #f3f4f6; border-right: 1px solid #ddd; padding: 0;">
             <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563;">Final Delivery</div>
             <div class="sidebar-items">
-                <a href="#" class="sidebar-link active" onclick="loadShipments('all', 'Shipment Notes')">Shipment Notes</a>
-                <a href="#" class="sidebar-link" onclick="loadOrdersToDeliver('ready', 'Ship products')">Ship products</a>
-                <a href="#" class="sidebar-link" onclick="loadOrdersToDeliver('outbox', 'Outbox')">Outbox</a>
-                <a href="#" class="sidebar-link" onclick="loadOrdersToDeliver('today', 'Shipping Today')">Shipping Today</a>
+                <a href="javascript:void(0)" class="sidebar-link active" onclick="loadShipments('all', 'Shipment Notes')">Shipment Notes</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrdersToDeliver('ready', 'Ship products')">Ship products</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrdersToDeliver('outbox', 'Outbox')">Outbox</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrdersToDeliver('today', 'Shipping Today')">Shipping Today</a>
             </div>
             <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">TryIn</div>
             <div class="sidebar-items">
-                <a href="#" class="sidebar-link" onclick="loadTryIn('history', 'Out History')">Out History</a>
-                <a href="#" class="sidebar-link" onclick="loadTryIn('ship', 'Ship TryIns')">Ship TryIns</a>
-                <a href="#" class="sidebar-link" onclick="loadTryIn('today', 'Scheduled Today')">Scheduled Today</a>
-                <a href="#" class="sidebar-link" onclick="loadTryIn('return-h', 'Return History')">Return History</a>
-                <a href="#" class="sidebar-link" onclick="loadTryIn('return-t', 'Return TryIns')">Return TryIns</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('history', 'Out History')">Out History</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('ship', 'Ship TryIns')">Ship TryIns</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('today', 'Scheduled Today')">Scheduled Today</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('return-h', 'Return History')">Return History</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('return-t', 'Return TryIns')">Return TryIns</a>
             </div>
             <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Backup & Export</div>
             <div class="sidebar-items">
-                <a href="http://localhost:5000/api/backup/system" class="sidebar-link"><i class="fas fa-file-archive"></i> System Backup (.zip)</a>
+                <a href="/api/backup/system" class="sidebar-link"><i class="fas fa-file-archive"></i> System Backup (.zip)</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="showExportModal()"><i class="fas fa-file-export"></i> Export Data</a>
             </div>
         </aside>
@@ -347,7 +347,68 @@
     </style>
 
     <script>
-        const API_BASE = 'http://localhost:5000/api';
+        // Floating Debug Panel for real-time diagnostics
+        (function() {
+            const panel = document.createElement('div');
+            panel.id = 'debug-console-panel';
+            panel.style.position = 'fixed';
+            panel.style.bottom = '10px';
+            panel.style.right = '10px';
+            panel.style.width = '350px';
+            panel.style.height = '200px';
+            panel.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+            panel.style.color = '#00ff00';
+            panel.style.fontFamily = 'monospace';
+            panel.style.fontSize = '11px';
+            panel.style.padding = '10px';
+            panel.style.borderRadius = '8px';
+            panel.style.overflowY = 'auto';
+            panel.style.zIndex = '999999';
+            panel.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+            panel.style.pointerEvents = 'auto';
+            panel.innerHTML = '<div style="font-weight:bold;border-bottom:1px solid #00ff00;padding-bottom:3px;margin-bottom:5px;cursor:pointer;" onclick="this.parentElement.style.display=\'none\'">Console Debug Logs (Click to Hide)</div>';
+            
+            // Wait for DOM to append
+            if (document.body) {
+                document.body.appendChild(panel);
+            } else {
+                window.addEventListener('DOMContentLoaded', () => document.body.appendChild(panel));
+            }
+
+            function logToPanel(msg, color = '#00ff00') {
+                const line = document.createElement('div');
+                line.style.color = color;
+                line.style.marginBottom = '3px';
+                line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                panel.appendChild(line);
+                panel.scrollTop = panel.scrollHeight;
+            }
+
+            // Override console methods
+            const origLog = console.log;
+            console.log = function(...args) {
+                origLog.apply(console, args);
+                logToPanel(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), '#00ff00');
+            };
+
+            const origError = console.error;
+            console.error = function(...args) {
+                origError.apply(console, args);
+                logToPanel(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), '#ff0000');
+            };
+
+            // Global Error Handlers
+            window.onerror = function(message, source, lineno, colno, error) {
+                console.error(`JS Error: ${message} at ${source}:${lineno}:${colno}`);
+                return false;
+            };
+
+            window.onunhandledrejection = function(event) {
+                console.error(`Promise Rejection: ${event.reason ? event.reason.message || event.reason : 'Unknown reason'}`);
+            };
+        })();
+
+        const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
         let currentMode = 'notes';
 
         async function loadClients() {
@@ -1260,113 +1321,131 @@
 
             document.querySelectorAll('.sidebar-link').forEach(link => {
                 link.addEventListener('click', (e) => {
+                    e.preventDefault();
                     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
                 });
             });
         });
         async function openConfirmShipmentModal() {
-            const ids = getSelectedIds();
-            if (ids.length === 0) {
-                alert('Please select at least one order to generate shipment notes.');
-                return;
-            }
-
-            // Fetch selected orders data
-            const orders = [];
-            for (const id of ids) {
-                const res = await fetch(`${API_BASE}/orders/${id}`);
-                const order = await res.json();
-                orders.push(order);
-            }
-
-            // Group by client
-            const clientsMap = {};
-            orders.forEach(o => {
-                const cid = o.clientId;
-                if (!clientsMap[cid]) {
-                    clientsMap[cid] = {
-                        client: o.client,
-                        orders: [],
-                        total: 0
-                    };
+            try {
+                console.log("openConfirmShipmentModal: started");
+                const ids = getSelectedIds();
+                console.log("openConfirmShipmentModal: selected order ids =", ids);
+                if (ids.length === 0) {
+                    alert('Please select at least one order to generate shipment notes.');
+                    return;
                 }
-                clientsMap[cid].orders.push(o);
-                clientsMap[cid].total += (o.totalAmount || 0);
-            });
 
-            const clientList = Object.values(clientsMap);
-            
-            // Create modal
-            const modal = document.createElement('div');
-            modal.id = 'confirm-shipment-modal';
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal-content" style="width: 900px; max-width: 95%;">
-                    <div class="modal-header">
-                        <h2 style="font-size: 18px; margin: 0;">Confirm Shipment Notes to be generated</h2>
-                        <button onclick="closeConfirmModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
-                    </div>
-                    <div style="padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <div style="font-size: 13px; display: flex; gap: 15px;">
-                                <span>View</span>
-                                <label><input type="radio" name="view-type" value="headers" checked> Headers</label>
-                                <label><input type="radio" name="view-type" value="composite"> Composite</label>
-                                <label style="margin-left: 20px;"><input type="checkbox" id="view-details"> View Details</label>
-                            </div>
-                            <div style="font-size: 13px;">
-                                <label style="display: block; margin-bottom: 5px;">Shipment Date</label>
-                                <input type="date" id="confirm-shipment-date" value="${new Date().toISOString().split('T')[0]}" style="padding: 4px; border: 1px solid #ccc; width: 130px;">
-                            </div>
+                // Fetch selected orders data
+                const orders = [];
+                for (const id of ids) {
+                    console.log(`openConfirmShipmentModal: fetching order with ID ${id}`);
+                    const res = await fetch(`${API_BASE}/orders/${id}`);
+                    if (!res.ok) {
+                        throw new Error(`Failed to fetch order ${id}: ${res.statusText}`);
+                    }
+                    const order = await res.json();
+                    console.log(`openConfirmShipmentModal: fetched order detail for ID ${id}`, order);
+                    orders.push(order);
+                }
+
+                // Group by client
+                const clientsMap = {};
+                orders.forEach(o => {
+                    if (!o) return;
+                    const cid = o.clientId || 'unknown';
+                    if (!clientsMap[cid]) {
+                        clientsMap[cid] = {
+                            client: o.client || { name: 'Unknown Client', id: cid },
+                            orders: [],
+                            total: 0
+                        };
+                    }
+                    clientsMap[cid].orders.push(o);
+                    clientsMap[cid].total += (o.totalAmount || 0);
+                });
+
+                const clientList = Object.values(clientsMap);
+                
+                // Create modal
+                const modal = document.createElement('div');
+                modal.id = 'confirm-shipment-modal';
+                modal.className = 'modal-overlay';
+                modal.style.cssText = "position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.6) !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 999999 !important;";
+                modal.innerHTML = `
+                    <div class="modal-content" style="width: 900px; max-width: 95%;">
+                        <div class="modal-header">
+                            <h2 style="font-size: 18px; margin: 0;">Confirm Shipment Notes to be generated</h2>
+                            <button onclick="closeConfirmModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
                         </div>
-                        
-                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #ddd;">
-                            <thead>
-                                <tr style="background: #f3f4f6; text-align: left;">
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 30px;">#</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd;">Client</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Total</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 150px;">Delivery Mode</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd;">Notes</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 100px;">Orders</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${clientList.map((item, idx) => `
-                                    <tr>
-                                        <td style="padding: 8px; border: 1px solid #ddd;">${idx + 1}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${item.client.name}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd;">${item.total.toFixed(0)}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd;">
-                                            <select class="confirm-delivery-mode" data-client-id="${item.client.id}" style="width: 100%; padding: 4px; border: 1px solid #ccc;">
-                                                <option value="Courier">Courier</option>
-                                                <option value="Self Pickup">Self Pickup</option>
-                                                <option value="Lab Delivery">Lab Delivery</option>
-                                            </select>
-                                        </td>
-                                        <td style="padding: 8px; border: 1px solid #ddd;">
-                                            <input type="text" class="confirm-notes" data-client-id="${item.client.id}" style="width: 100%; padding: 4px; border: 1px solid #ccc;">
-                                        </td>
-                                        <td style="padding: 8px; border: 1px solid #ddd; color: #3b82f6; display: flex; align-items: center; gap: 5px;">
-                                            <i class="far fa-folder-open"></i> ${item.orders.length}
-                                        </td>
+                        <div style="padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div style="font-size: 13px; display: flex; gap: 15px;">
+                                    <span>View</span>
+                                    <label><input type="radio" name="view-type" value="headers" checked> Headers</label>
+                                    <label><input type="radio" name="view-type" value="composite"> Composite</label>
+                                    <label style="margin-left: 20px;"><input type="checkbox" id="view-details"> View Details</label>
+                                </div>
+                                <div style="font-size: 13px;">
+                                    <label style="display: block; margin-bottom: 5px;">Shipment Date</label>
+                                    <input type="date" id="confirm-shipment-date" value="${new Date().toISOString().split('T')[0]}" style="padding: 4px; border: 1px solid #ccc; width: 130px;">
+                                </div>
+                            </div>
+                            
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #ddd;">
+                                <thead>
+                                    <tr style="background: #f3f4f6; text-align: left;">
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 30px;">#</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Client</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Total</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 150px;">Delivery Mode</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Notes</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 100px;">Orders</th>
                                     </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                        
-                        <div style="margin-top: 20px; display: flex; gap: 10px;">
-                            <button onclick="saveGeneratedShipments()" style="padding: 8px 15px; background: #fff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 3px; cursor: pointer; font-weight: 500;">Save Shipment Notes</button>
-                            <button onclick="closeConfirmModal()" style="padding: 8px 15px; background: #fff; border: 1px solid #ddd; color: #666; border-radius: 3px; cursor: pointer;">Cancel</button>
+                                </thead>
+                                <tbody>
+                                    ${clientList.map((item, idx) => {
+                                        const cName = item.client ? item.client.name : 'Unknown Client';
+                                        const cId = item.client ? item.client.id : 'unknown';
+                                        return `
+                                        <tr>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${idx + 1}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${cName}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${item.total.toFixed(0)}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                                <select class="confirm-delivery-mode" data-client-id="${cId}" style="width: 100%; padding: 4px; border: 1px solid #ccc;">
+                                                    <option value="Courier">Courier</option>
+                                                    <option value="Self Pickup">Self Pickup</option>
+                                                    <option value="Lab Delivery">Lab Delivery</option>
+                                                </select>
+                                            </td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">
+                                                <input type="text" class="confirm-notes" data-client-id="${cId}" style="width: 100%; padding: 4px; border: 1px solid #ccc;">
+                                            </td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; color: #3b82f6; display: flex; align-items: center; gap: 5px;">
+                                                <i class="far fa-folder-open"></i> ${item.orders.length}
+                                            </td>
+                                        </tr>
+                                    `}).join('')}
+                                </tbody>
+                            </table>
+                            
+                            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                                <button onclick="saveGeneratedShipments()" style="padding: 8px 15px; background: #fff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 3px; cursor: pointer; font-weight: 500;">Save Shipment Notes</button>
+                                <button onclick="closeConfirmModal()" style="padding: 8px 15px; background: #fff; border: 1px solid #ddd; color: #666; border-radius: 3px; cursor: pointer;">Cancel</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            // Store selected orders for saving
-            modal.dataset.orders = JSON.stringify(orders);
+                `;
+                document.body.appendChild(modal);
+                
+                // Store selected orders for saving
+                modal.dataset.orders = JSON.stringify(orders);
+            } catch (err) {
+                console.error("Error in openConfirmShipmentModal:", err);
+                alert("An error occurred: " + err.message);
+            }
         }
 
         function closeConfirmModal() {
@@ -1375,152 +1454,189 @@
         }
 
         async function saveGeneratedShipments() {
-            const modal = document.getElementById('confirm-shipment-modal');
-            const orders = JSON.parse(modal.dataset.orders);
-            const clientsMap = {};
-            
-            orders.forEach(o => {
-                if (!clientsMap[o.clientId]) clientsMap[o.clientId] = [];
-                clientsMap[o.clientId].push(o.id);
-            });
-
-            const shipmentDate = document.getElementById('confirm-shipment-date').value;
-            
-            for (const clientId in clientsMap) {
-                const orderIds = clientsMap[clientId];
-                const deliveryMode = document.querySelector(`.confirm-delivery-mode[data-client-id="${clientId}"]`).value;
-                const notes = document.querySelector(`.confirm-notes[data-client-id="${clientId}"]`).value;
+            try {
+                const modal = document.getElementById('confirm-shipment-modal');
+                if (!modal) return;
+                const orders = JSON.parse(modal.dataset.orders);
+                const clientsMap = {};
                 
-                // 1. Create Shipment Note
-                await fetch(`${API_BASE}/shipment-notes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        clientId: parseInt(clientId),
-                        orderIds: orderIds,
-                        noteNumber: 'SN-' + Date.now().toString().slice(-6),
-                        deliveryMode: deliveryMode,
-                        notes: notes,
-                        noteDate: shipmentDate // We'll need to parse this on backend if format is different
-                    })
+                orders.forEach(o => {
+                    if (!o) return;
+                    const cid = o.clientId || 'unknown';
+                    if (!clientsMap[cid]) clientsMap[cid] = [];
+                    clientsMap[cid].push(o.id);
                 });
-                
-            }
 
-            alert('Shipment Notes generated successfully!');
-            closeConfirmModal();
-            loadOrdersToDeliver('ready', 'Ship products');
+                const shipmentDate = document.getElementById('confirm-shipment-date').value;
+                
+                for (const clientId in clientsMap) {
+                    if (clientId === 'unknown') {
+                        alert("Cannot generate shipment note for orders with unknown clients.");
+                        continue;
+                    }
+                    const orderIds = clientsMap[clientId];
+                    const deliverySelect = document.querySelector(`.confirm-delivery-mode[data-client-id="${clientId}"]`);
+                    const notesInput = document.querySelector(`.confirm-notes[data-client-id="${clientId}"]`);
+                    
+                    const deliveryMode = deliverySelect ? deliverySelect.value : 'Courier';
+                    const notes = notesInput ? notesInput.value : '';
+                    
+                    // 1. Create Shipment Note
+                    const res = await fetch(`${API_BASE}/shipment-notes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            clientId: parseInt(clientId),
+                            orderIds: orderIds,
+                            noteNumber: 'SN-' + Date.now().toString().slice(-6),
+                            deliveryMode: deliveryMode,
+                            notes: notes,
+                            noteDate: shipmentDate
+                        })
+                    });
+                    
+                    if (res.ok) {
+                        const note = await res.json();
+                        // window.open(`delivery_note.html?id=${note.id}`, '_blank');
+                    } else {
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.error || `Failed to create shipment note (status: ${res.status})`);
+                    }
+                }
+
+                alert('Shipment Notes generated successfully!');
+                closeConfirmModal();
+                loadOrdersToDeliver('ready', 'Ship products');
+            } catch (err) {
+                console.error("Error in saveGeneratedShipments:", err);
+                alert("An error occurred while saving: " + err.message);
+            }
         }
         async function openConfirmInvoiceModal() {
-            const ids = getSelectedIds();
-            if (ids.length === 0) {
-                alert('Please select at least one order to generate invoices.');
-                return;
-            }
-
-            // Fetch selected orders data
-            const orders = [];
-            for (const id of ids) {
-                const res = await fetch(`${API_BASE}/orders/${id}`);
-                const order = await res.json();
-                orders.push(order);
-            }
-
-            // Group by client
-            const clientsMap = {};
-            orders.forEach(o => {
-                const cid = o.clientId;
-                if (!clientsMap[cid]) {
-                    clientsMap[cid] = {
-                        client: o.client,
-                        orders: [],
-                        total: 0
-                    };
+            try {
+                console.log("openConfirmInvoiceModal: started");
+                const ids = getSelectedIds();
+                console.log("openConfirmInvoiceModal: selected order ids =", ids);
+                if (ids.length === 0) {
+                    alert('Please select at least one order to generate invoices.');
+                    return;
                 }
-                clientsMap[cid].orders.push(o);
-                clientsMap[cid].total += (o.totalAmount || 0);
-            });
 
-            const clientList = Object.values(clientsMap);
-            
-            // Create modal
-            const modal = document.createElement('div');
-            modal.id = 'confirm-invoice-modal';
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal-content" style="width: 900px; max-width: 95%;">
-                    <div class="modal-header">
-                        <h2 style="font-size: 18px; margin: 0;">Confirm invoices to be generated</h2>
-                        <button onclick="closeConfirmInvoiceModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
-                    </div>
-                    <div style="padding: 20px;">
-                        <div style="display: flex; gap: 30px; margin-bottom: 20px;">
-                            <div>
-                                <label style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Tax</label>
-                                <select id="invoice-tax-type" style="padding: 4px; border: 1px solid #ccc; font-size: 13px;">
-                                    <option value="0">None 0%</option>
-                                    <option value="5">GST 5%</option>
-                                    <option value="12">GST 12%</option>
-                                    <option value="18">GST 18%</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Invoice Date</label>
-                                <input type="date" id="confirm-invoice-date" value="${new Date().toISOString().split('T')[0]}" style="padding: 4px; border: 1px solid #ccc; width: 130px; font-size: 13px;">
-                            </div>
+                // Fetch selected orders data
+                const orders = [];
+                for (const id of ids) {
+                    console.log(`openConfirmInvoiceModal: fetching order with ID ${id}`);
+                    const res = await fetch(`${API_BASE}/orders/${id}`);
+                    if (!res.ok) {
+                        throw new Error(`Failed to fetch order ${id}: ${res.statusText}`);
+                    }
+                    const order = await res.json();
+                    console.log(`openConfirmInvoiceModal: fetched order detail for ID ${id}`, order);
+                    orders.push(order);
+                }
+
+                // Group by client
+                const clientsMap = {};
+                orders.forEach(o => {
+                    if (!o) return;
+                    const cid = o.clientId || 'unknown';
+                    if (!clientsMap[cid]) {
+                        clientsMap[cid] = {
+                            client: o.client || { name: 'Unknown Client', id: cid, paymentTermsDays: 0 },
+                            orders: [],
+                            total: 0
+                        };
+                    }
+                    clientsMap[cid].orders.push(o);
+                    clientsMap[cid].total += (o.totalAmount || 0);
+                });
+
+                const clientList = Object.values(clientsMap);
+                
+                // Create modal
+                const modal = document.createElement('div');
+                modal.id = 'confirm-invoice-modal';
+                modal.className = 'modal-overlay';
+                modal.style.cssText = "position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.6) !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 999999 !important;";
+                modal.innerHTML = `
+                    <div class="modal-content" style="width: 900px; max-width: 95%;">
+                        <div class="modal-header">
+                            <h2 style="font-size: 18px; margin: 0;">Confirm invoices to be generated</h2>
+                            <button onclick="closeConfirmInvoiceModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
                         </div>
-                        
-                        <div style="font-size: 13px; display: flex; gap: 15px; margin-bottom: 15px;">
-                            <span>View</span>
-                            <label><input type="radio" name="inv-view-type" value="headers" checked> Headers</label>
-                            <label><input type="radio" name="inv-view-type" value="composite"> Composite</label>
-                            <label style="margin-left: 20px;"><input type="checkbox"> View Details</label>
-                        </div>
-                        
-                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #ddd;">
-                            <thead>
-                                <tr style="background: #f3f4f6; text-align: left;">
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 30px;">#</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd;">Client</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Job Total</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 60px;">Tax</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Amount</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Pay Terms</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 100px;">Due Date</th>
-                                    <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Orders</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${clientList.map((item, idx) => {
-                                    const payTerms = item.client.paymentTermsDays || 0;
-                                    const dueDate = new Date();
-                                    dueDate.setDate(dueDate.getDate() + payTerms);
-                                    return `
-                                    <tr>
-                                        <td style="padding: 8px; border: 1px solid #ddd;">${idx + 1}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${item.client.name}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd;">${item.total.toFixed(0)}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd;">0</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${item.total.toFixed(0)}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${payTerms} days</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${dueDate.toLocaleDateString('en-GB')}</td>
-                                        <td style="padding: 8px; border: 1px solid #ddd; color: #3b82f6; display: flex; align-items: center; gap: 5px;">
-                                            <i class="far fa-folder-open"></i> ${item.orders.length}
-                                        </td>
+                        <div style="padding: 20px;">
+                            <div style="display: flex; gap: 30px; margin-bottom: 20px;">
+                                <div>
+                                    <label style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Tax</label>
+                                    <select id="invoice-tax-type" style="padding: 4px; border: 1px solid #ccc; font-size: 13px;">
+                                        <option value="0">None 0%</option>
+                                        <option value="5">GST 5%</option>
+                                        <option value="12">GST 12%</option>
+                                        <option value="18">GST 18%</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Invoice Date</label>
+                                    <input type="date" id="confirm-invoice-date" value="${new Date().toISOString().split('T')[0]}" style="padding: 4px; border: 1px solid #ccc; width: 130px; font-size: 13px;">
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 13px; display: flex; gap: 15px; margin-bottom: 15px;">
+                                <span>View</span>
+                                <label><input type="radio" name="inv-view-type" value="headers" checked> Headers</label>
+                                <label><input type="radio" name="inv-view-type" value="composite"> Composite</label>
+                                <label style="margin-left: 20px;"><input type="checkbox"> View Details</label>
+                            </div>
+                            
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #ddd;">
+                                <thead>
+                                    <tr style="background: #f3f4f6; text-align: left;">
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 30px;">#</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd;">Client</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Job Total</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 60px;">Tax</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Amount</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Pay Terms</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 100px;">Due Date</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Orders</th>
                                     </tr>
-                                `}).join('')}
-                            </tbody>
-                        </table>
-                        
-                        <div style="margin-top: 20px; display: flex; gap: 10px;">
-                            <button onclick="saveGeneratedInvoices()" style="padding: 8px 25px; background: #fff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 3px; cursor: pointer; font-weight: 700;">Save Invoice</button>
-                            <button onclick="closeConfirmInvoiceModal()" style="padding: 8px 20px; background: #fff; border: 1px solid #ddd; color: #666; border-radius: 3px; cursor: pointer;">Cancel</button>
+                                </thead>
+                                <tbody>
+                                    ${clientList.map((item, idx) => {
+                                        const cName = item.client ? item.client.name : 'Unknown Client';
+                                        const payTerms = (item.client && item.client.paymentTermsDays) || 0;
+                                        const dueDate = new Date();
+                                        dueDate.setDate(dueDate.getDate() + payTerms);
+                                        return `
+                                        <tr>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${idx + 1}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${cName}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${item.total.toFixed(0)}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">0</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${item.total.toFixed(0)}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${payTerms} days</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${dueDate.toLocaleDateString('en-GB')}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; color: #3b82f6; display: flex; align-items: center; gap: 5px;">
+                                                <i class="far fa-folder-open"></i> ${item.orders.length}
+                                            </td>
+                                        </tr>
+                                    `}).join('')}
+                                </tbody>
+                            </table>
+                            
+                            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                                <button onclick="saveGeneratedInvoices()" style="padding: 8px 25px; background: #fff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 3px; cursor: pointer; font-weight: 700;">Save Invoice</button>
+                                <button onclick="closeConfirmInvoiceModal()" style="padding: 8px 20px; background: #fff; border: 1px solid #ddd; color: #666; border-radius: 3px; cursor: pointer;">Cancel</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            modal.dataset.orders = JSON.stringify(orders);
+                `;
+                document.body.appendChild(modal);
+                modal.dataset.orders = JSON.stringify(orders);
+            } catch (err) {
+                console.error("Error in openConfirmInvoiceModal:", err);
+                alert("An error occurred: " + err.message);
+            }
         }
 
         function closeConfirmInvoiceModal() {
@@ -1529,48 +1645,63 @@
         }
 
         async function saveGeneratedInvoices() {
-            const modal = document.getElementById('confirm-invoice-modal');
-            const orders = JSON.parse(modal.dataset.orders);
-            const clientsMap = {};
-            
-            orders.forEach(o => {
-                if (!clientsMap[o.clientId]) clientsMap[o.clientId] = [];
-                clientsMap[o.clientId].push(o.id);
-            });
-
-            const invoiceDate = document.getElementById('confirm-invoice-date').value;
-            const taxPercentage = parseFloat(document.getElementById('invoice-tax-type').value) || 0;
-            
-            for (const clientId in clientsMap) {
-                const orderIds = clientsMap[clientId];
+            try {
+                const modal = document.getElementById('confirm-invoice-modal');
+                if (!modal) return;
+                const orders = JSON.parse(modal.dataset.orders);
+                const clientsMap = {};
                 
-                // Fetch full order data to compute gross
-                const ordersToInvoice = orders.filter(o => o.clientId == clientId);
-                const grossAmount = ordersToInvoice.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-                const taxAmount = grossAmount * (taxPercentage / 100);
-                const netAmount = grossAmount + taxAmount;
-
-                const res = await fetch(`${API_BASE}/invoices`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        orderIds: orderIds,
-                        clientId: parseInt(clientId),
-                        invoiceDate: invoiceDate,
-                        grossAmount: grossAmount,
-                        taxAmount: taxAmount,
-                        netAmount: netAmount
-                    })
+                orders.forEach(o => {
+                    if (!o) return;
+                    const cid = o.clientId || 'unknown';
+                    if (!clientsMap[cid]) clientsMap[cid] = [];
+                    clientsMap[cid].push(o.id);
                 });
-                if (res.ok) {
-                    const invoice = await res.json();
-                    window.open(`invoice.html?id=${invoice.id}`, '_blank');
-                }
-            }
 
-            alert('Invoices generated successfully!');
-            closeConfirmInvoiceModal();
-            loadOrdersToDeliver('ready', 'Ship products');
+                const invoiceDate = document.getElementById('confirm-invoice-date').value;
+                const taxPercentage = parseFloat(document.getElementById('invoice-tax-type').value) || 0;
+                
+                for (const clientId in clientsMap) {
+                    if (clientId === 'unknown') {
+                        alert("Cannot generate invoice for orders with unknown clients.");
+                        continue;
+                    }
+                    const orderIds = clientsMap[clientId];
+                    
+                    // Fetch full order data to compute gross
+                    const ordersToInvoice = orders.filter(o => o.clientId == clientId);
+                    const grossAmount = ordersToInvoice.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+                    const taxAmount = grossAmount * (taxPercentage / 100);
+                    const netAmount = grossAmount + taxAmount;
+
+                    const res = await fetch(`${API_BASE}/invoices`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            orderIds: orderIds,
+                            clientId: parseInt(clientId),
+                            invoiceDate: invoiceDate,
+                            grossAmount: grossAmount,
+                            taxAmount: taxAmount,
+                            netAmount: netAmount
+                        })
+                    });
+                    if (res.ok) {
+                        const invoice = await res.json();
+                        window.open(`invoice.html?id=${invoice.id}`, '_blank');
+                    } else {
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.error || `Failed to create invoice (status: ${res.status})`);
+                    }
+                }
+
+                alert('Invoices generated successfully!');
+                closeConfirmInvoiceModal();
+                loadOrdersToDeliver('ready', 'Ship products');
+            } catch (err) {
+                console.error("Error in saveGeneratedInvoices:", err);
+                alert("An error occurred while saving: " + err.message);
+            }
         }
         async function printPriceList() {
             const clientName = document.getElementById('prof-client-name').textContent;
@@ -1646,3 +1777,4 @@
     </script>
 </body>
 </html>
+

@@ -67,13 +67,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // --- RECEIPTS ---
-app.get('/api/receipts', async (req, res) => {
-  try {
-    const receipts = await prisma.receipt.findMany({ include: { client: true }, orderBy: { id: 'desc' } });
-    res.json(receipts);
-  } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
 app.get('/api/receipts/next-number', async (req, res) => {
   try {
     const count = await prisma.receipt.count();
@@ -81,18 +74,6 @@ app.get('/api/receipts/next-number', async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.post('/api/receipts', async (req, res) => {
-  try {
-    const data = { ...req.body };
-    data.clientId = Number(data.clientId);
-    data.amount = Number(data.amount);
-    data.appliedAmount = Number(data.appliedAmount || 0);
-    data.receiptDate = toDate(data.receiptDate) || new Date();
-    
-    const receipt = await prisma.receipt.create({ data });
-    res.status(201).json(receipt);
-  } catch (error) { res.status(500).json({ error: error.message }); }
-});
 
 // --- EXPENSES ---
 app.get('/api/expenses', async (req, res) => {
@@ -254,6 +235,13 @@ app.get('/api/orders', async (req, res) => {
     if (invoiceId) {
       where.AND.push({ invoiceId: Number(invoiceId) });
     }
+    if (invoiceStatus) {
+      if (invoiceStatus === 'Pending') {
+        where.AND.push({ invoiceId: null });
+      } else if (invoiceStatus === 'Invoiced') {
+        where.AND.push({ invoiceId: { not: null } });
+      }
+    }
 
     if (search) {
       where.AND.push({
@@ -281,7 +269,7 @@ app.get('/api/orders', async (req, res) => {
 
     const orders = await prisma.order.findMany({ 
       where,
-      include: { client: true, shipmentNote: true, invoice: true },
+      include: { client: true, shipmentNote: true, invoice: true, jobs: true },
       orderBy: { id: 'desc' }
     });
     res.json(orders);
@@ -293,6 +281,10 @@ app.post('/api/orders', async (req, res) => {
     const data = { ...req.body };
     data.clientId = Number(data.clientId);
     
+    // Extract jobs array if provided
+    const jobsData = data.jobs || [];
+    delete data.jobs;
+
     // Map frontend fields to Prisma schema
     if (data.workType !== undefined) {
       data.productType = data.workType;
@@ -350,16 +342,67 @@ app.post('/api/orders', async (req, res) => {
       if (data[f] !== undefined) cleanData[f] = data[f];
     });
 
-    const order = await prisma.order.create({ data: cleanData });
+    // Handle nested jobs creation
+    if (jobsData.length > 0) {
+      cleanData.jobs = {
+        create: jobsData.map(job => ({
+          productType: job.productType || 'General',
+          productName: job.productName,
+          material: job.material,
+          teethSelection: job.teethSelection,
+          shade1: job.shade1,
+          shade2: job.shade2,
+          shade3: job.shade3,
+          shadeNotes: job.shadeNotes,
+          stumpShade: job.stumpShade,
+          units: toNum(job.units) || 1,
+          price: toNum(job.price) || 0,
+          totalAmount: toNum(job.totalAmount) || 0,
+          slab1Rate: toNum(job.slab1Rate),
+          slab2Rate: toNum(job.slab2Rate),
+          slab1Units: toNum(job.slab1Units),
+          slab2Units: toNum(job.slab2Units)
+        }))
+      };
+    } else if (cleanData.productName) {
+      cleanData.jobs = {
+        create: [{
+          productType: cleanData.productType || 'General',
+          productName: cleanData.productName,
+          material: cleanData.material,
+          teethSelection: cleanData.teethSelection,
+          shade1: cleanData.shade1,
+          shade2: cleanData.shade2,
+          shade3: cleanData.shade3,
+          shadeNotes: cleanData.shadeNotes,
+          stumpShade: cleanData.stumpShade,
+          units: toNum(cleanData.units) || 1,
+          price: toNum(req.body.unitRate) || toNum(cleanData.price) || 0,
+          totalAmount: toNum(cleanData.totalAmount) || 0,
+          slab1Rate: toNum(cleanData.slab1Rate),
+          slab2Rate: toNum(cleanData.slab2Rate),
+          slab1Units: toNum(cleanData.slab1Units),
+          slab2Units: toNum(cleanData.slab2Units)
+        }]
+      };
+    }
+
+    const order = await prisma.order.create({ 
+      data: cleanData,
+      include: { jobs: true }
+    });
     res.status(201).json(order);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) { 
+    console.error("Create order error:", error);
+    res.status(500).json({ error: error.message }); 
+  }
 });
 
 app.get('/api/orders/:id', async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
       where: { id: Number(req.params.id) },
-      include: { client: true, invoice: true, shipmentNote: true }
+      include: { client: true, invoice: true, shipmentNote: true, jobs: true }
     });
     if (!order) return res.status(404).json({ error: 'Order not found' });
     res.json(order);
@@ -463,48 +506,7 @@ app.get('/api/orders/:id/images', async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// --- SHIPMENT NOTES ---
-// Removed duplicate GET /api/shipment-notes
-app.post('/api/shipment-notes', async (req, res) => {
-  try {
-    const { orderIds, ...rest } = req.body;
-    const data = { ...rest };
-    data.clientId = Number(data.clientId);
-    data.noteDate = toDate(data.noteDate) || new Date();
-    
-    // Clean data for Prisma
-    const cleanData = {
-      noteNumber: data.noteNumber,
-      clientId: data.clientId,
-      noteDate: data.noteDate,
-      type: data.type || 'Final',
-      status: data.status || 'Created',
-      deliveryMode: data.deliveryMode,
-      notes: data.notes
-    };
-
-    const note = await prisma.$transaction(async (tx) => {
-      const created = await tx.shipmentNote.create({
-        data: {
-          ...cleanData
-        }
-      });
-      
-      if (orderIds && orderIds.length > 0) {
-        await tx.order.updateMany({
-          where: { id: { in: orderIds.map(id => Number(id)) } },
-          data: { shippingStatus: 'Dispatched', shipmentNoteId: created.id }
-        });
-      }
-      return created;
-    });
-
-    res.status(201).json(note);
-  } catch (error) { 
-    console.error("Shipment Note Creation Error:", error);
-    res.status(500).json({ error: error.message }); 
-  }
-});
+// --- SHIPMENT NOTES (Defined below to avoid duplicates) ---
 
 // --- DELIVERY PLANS ---
 app.get('/api/delivery-plans', async (req, res) => {
@@ -901,9 +903,14 @@ app.get('/api/products', async (req, res) => {
   try {
     const { search, type } = req.query;
     const where = {};
-    if (search) where.name = { contains: search };
     if (type && type !== 'All Product Types') where.type = type;
-    const products = await prisma.product.findMany({ where });
+    
+    let products = await prisma.product.findMany({ where });
+    
+    if (search) {
+      const s = search.toLowerCase();
+      products = products.filter(p => p.name && p.name.toLowerCase().includes(s));
+    }
     res.json(products);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -914,6 +921,37 @@ app.post('/api/products', async (req, res) => {
     data.charge = toNum(data.charge) || 0;
     const product = await prisma.product.create({ data });
     res.status(201).json(product);
+  } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: Number(req.params.id) }
+    });
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
+  } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const data = { ...req.body };
+    if (data.charge !== undefined) data.charge = toNum(data.charge) || 0;
+    const product = await prisma.product.update({
+      where: { id: Number(req.params.id) },
+      data
+    });
+    res.json(product);
+  } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    await prisma.product.delete({
+      where: { id: Number(req.params.id) }
+    });
+    res.status(204).send();
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
@@ -1154,10 +1192,18 @@ app.put('/api/shipment-notes/:id', async (req, res) => {
 app.post('/api/shipment-notes', async (req, res) => {
   try {
     const { clientId, orderIds, noteNumber, noteDate, deliveryMode, notes } = req.body;
+    
+    if (!clientId || isNaN(Number(clientId))) {
+      return res.status(400).json({ error: 'Valid clientId is required' });
+    }
+    
+    const finalNoteNumber = noteNumber || ('SN-' + Date.now().toString().slice(-6));
+    const finalNoteDate = noteDate ? new Date(noteDate) : new Date();
+
     const note = await prisma.shipmentNote.create({
       data: {
-        noteNumber: noteNumber || ('SN-' + Date.now().toString().slice(-6)),
-        noteDate: noteDate ? new Date(noteDate) : new Date(),
+        noteNumber: finalNoteNumber,
+        noteDate: finalNoteDate,
         deliveryMode: deliveryMode || 'Courier',
         notes: notes || '',
         client: { connect: { id: Number(clientId) } },
@@ -1165,15 +1211,22 @@ app.post('/api/shipment-notes', async (req, res) => {
       },
       include: { client: true, orders: true }
     });
-    // Update status of orders to Delivered
+    
+    // Update status of orders to Delivered and shippingStatus to Dispatched
     if (orderIds && orderIds.length > 0) {
       await prisma.order.updateMany({
         where: { id: { in: orderIds.map(id => Number(id)) } },
-        data: { status: 'Delivered' }
+        data: { 
+          status: 'Delivered',
+          shippingStatus: 'Dispatched'
+        }
       });
     }
     res.status(201).json(note);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) { 
+    console.error("Error creating shipment note:", error);
+    res.status(500).json({ error: error.message }); 
+  }
 });
 
 app.get('/api/delivery-plans', async (req, res) => {
@@ -1418,6 +1471,15 @@ function getTransactions() {
     return JSON.parse(fs.readFileSync(TRANSACTIONS_FILE, 'utf8'));
   } catch (e) { return []; }
 }
+
+app.get('/api/inventory/transactions/next-number', async (req, res) => {
+  try {
+    const { type } = req.query;
+    const transactions = getTransactions().filter(t => t.type === type);
+    const nextNum = (transactions.length + 1).toString().padStart(5, '0');
+    res.json({ nextNumber: nextNum });
+  } catch (error) { res.status(500).json({ error: error.message }); }
+});
 
 app.get('/api/inventory/transactions', async (req, res) => {
   try {

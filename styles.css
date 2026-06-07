@@ -29,6 +29,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* --- HEADER --- */
@@ -250,9 +251,30 @@ td {
     text-transform: uppercase;
 }
 
-.status-production { background: #ede9fe; color: #7c3aed; }
-.status-complete { background: #d1fae5; color: #059669; }
-.status-hold { background: #fef3c7; color: #d97706; }
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+/* Enhanced Table Status colors */
+tr[data-status="Hold"] { background-color: #fffbeb !important; }
+tr[data-status="On Hold"] { background-color: #fffbeb !important; }
+tr[data-status="Cancelled"] { background-color: #fef2f2 !important; }
+tr[data-status="Try In"] { background-color: #fdf2f8 !important; }
+tr[data-status="New"] { border-left: 4px solid #6366f1; }
+
+.status-new { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+.status-production { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+.status-complete { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
+.status-hold { background: #fffbeb; color: #92400e; border: 1px solid #fef3c7; font-weight: 800; }
+.status-tryin { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
+.status-cancelled { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+.status-delivered { background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; }
+.status-shipped { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
 
 /* --- ALERT BLOCKS --- */
 .alert-box {

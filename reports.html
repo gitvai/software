@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -119,6 +119,38 @@
             transform: scale(1.1);
             background: #fef2f2;
         }
+
+        /* Teeth Chart Grid */
+        .teeth-chart {
+            display: table;
+            width: 180px;
+            table-layout: fixed;
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+        .teeth-chart .teeth-row {
+            display: table-row;
+        }
+        .teeth-chart .teeth-quad {
+            display: table-cell;
+            width: 50%;
+            height: 20px;
+            vertical-align: middle;
+            white-space: nowrap;
+            padding: 2px 0;
+        }
+        .teeth-chart .tooth-cell {
+            display: inline-block;
+            width: 11px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+        .teeth-chart .teeth-quad.ur { border-right: 1.5px solid #333; border-bottom: 1.5px solid #333; text-align: right; }
+        .teeth-chart .teeth-quad.ul { border-bottom: 1.5px solid #333; text-align: left; }
+        .teeth-chart .teeth-quad.lr { border-right: 1.5px solid #333; text-align: right; }
+        .teeth-chart .teeth-quad.ll { text-align: left; }
     </style>
     <script src="transitions.js"></script>
 </head>
@@ -733,7 +765,7 @@
             </a>
 
             <!-- Backup Tab Reports -->
-            <a href="http://localhost:5000/api/backup/system" class="report-item" data-category="Backup">
+            <a href="/api/backup/system" class="report-item" data-category="Backup">
                 <i class="far fa-star empty"></i>
                 <i class="fas fa-file-archive"></i>
                 <span>Full System Backup (.zip)</span>
@@ -830,6 +862,56 @@
     <script>
         const API_BASE = 'http://localhost:5000/api';
 
+        function createTeethGrid(selection) {
+            if (!selection || selection.trim() === "") return '-';
+            try {
+                const teeth = selection.split(',').map(s => s.trim()).filter(s => s !== "");
+                const quadrants = { 1: [], 2: [], 3: [], 4: [] };
+                teeth.forEach(t => {
+                    const val = parseInt(t);
+                    if (isNaN(val)) return;
+                    let q = Math.floor(val / 10);
+                    const n = val % 10;
+                    if (q === 5) q = 1;
+                    if (q === 6) q = 2;
+                    if (q === 7) q = 3;
+                    if (q === 8) q = 4;
+                    if (quadrants[q]) quadrants[q].push(n);
+                });
+                const renderQuadRight = (quad) => {
+                    let html = '';
+                    for (let i = 8; i >= 1; i--) {
+                        const hasTooth = quadrants[quad].includes(i);
+                        html += `<span class="tooth-cell">${hasTooth ? i : '&nbsp;'}</span>`;
+                    }
+                    return html;
+                };
+                const renderQuadLeft = (quad) => {
+                    let html = '';
+                    for (let i = 1; i <= 8; i++) {
+                        const hasTooth = quadrants[quad].includes(i);
+                        html += `<span class="tooth-cell">${hasTooth ? i : '&nbsp;'}</span>`;
+                    }
+                    return html;
+                };
+                return `
+                    <div class="teeth-chart">
+                        <div class="teeth-row">
+                            <div class="teeth-quad ur">${renderQuadRight(1)}</div>
+                            <div class="teeth-quad ul">${renderQuadLeft(2)}</div>
+                        </div>
+                        <div class="teeth-row">
+                            <div class="teeth-quad lr">${renderQuadRight(4)}</div>
+                            <div class="teeth-quad ll">${renderQuadLeft(3)}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                console.error("Error creating teeth grid:", e);
+                return selection;
+            }
+        }
+
         // Category Filtering
         document.querySelectorAll('.sub-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -920,15 +1002,21 @@
                 } else if (name === 'Due Date wise Order Jobs') {
                     const res = await fetch(`${API_BASE}/orders`);
                     data = await res.json();
-                    headers = ['Due Date', 'Order #', 'Client', 'Patient', 'Status'];
+                    headers = ['Due Date', 'Trial Date', 'Order #', 'Client', 'Patient', 'Product', 'Teeth', 'Units', 'Shade', 'Amount', 'Status'];
                     rows = data
-                        .filter(o => o.dueDate)
+                        .filter(o => o.dueDate && !['Complete', 'Delivered', 'Cancelled'].includes(o.status))
                         .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
                         .map(o => [
-                            new Date(o.dueDate).toLocaleDateString(),
+                            new Date(o.dueDate).toLocaleDateString('en-GB'),
+                            o.trialDate ? new Date(o.trialDate).toLocaleDateString('en-GB') : '-',
                             o.orderNumber || o.id,
                             o.client ? o.client.name : 'Unknown',
-                            o.patientName,
+                            o.patientName || '-',
+                            o.productName || o.productType || '-',
+                            createTeethGrid(o.teethSelection),
+                            o.units || '1',
+                            [o.shade1, o.shade2, o.shade3].filter(s => s).join('/') || '-',
+                            (o.totalAmount || 0).toFixed(2),
                             o.status
                         ]);
                 } else if (name === 'Monthly Collection Amount') {
@@ -1152,8 +1240,22 @@
                     // Generic handler for others
                     const res = await fetch(`${API_BASE}/orders`);
                     data = await res.json();
-                    headers = ['ID', 'Reference', 'Type', 'Status'];
-                    rows = data.slice(0, 20).map(o => [o.id, o.orderNumber || '-', o.productName || o.productType || '-', o.status]);
+                    headers = ['Order Date', 'Due Date', 'Order #', 'Client', 'Patient', 'Product', 'Teeth', 'Units', 'Model #', 'Dept', 'Assign To', 'Amount', 'Status'];
+                    rows = data.map(o => [
+                        o.receivedDate ? new Date(o.receivedDate).toLocaleDateString('en-GB') : '-',
+                        o.dueDate ? new Date(o.dueDate).toLocaleDateString('en-GB') : '-',
+                        o.orderNumber || o.id,
+                        o.client ? o.client.name : 'Unknown',
+                        o.patientName || '-',
+                        o.productName || o.productType || '-',
+                        createTeethGrid(o.teethSelection),
+                        o.units || '1',
+                        o.modelNumber || '-',
+                        o.department || '-',
+                        o.assignTo || '-',
+                        (o.totalAmount || 0).toFixed(2),
+                        o.status
+                    ]);
                 }
 
                 renderTableReport(name, headers, rows);
@@ -1242,3 +1344,4 @@
 </html>
 </body>
 </html>
+

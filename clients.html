@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -66,7 +66,7 @@
                 <div class="quick-actions" style="display:grid; gap:10px;">
                     <button class="btn-action"
                         style="background:#1f2937; color:#fff; border:none; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px; font-weight:600; width:100%; cursor:pointer;"
-                        onclick="window.location.href='http://localhost:5000/api/backup/system'">
+                        onclick="window.location.href='/api/backup/system'">
                         <i class="fas fa-file-archive"></i> System Backup (.zip)
                     </button>
                     <button class="btn-action"
@@ -126,7 +126,7 @@
                         <button class="btn-action" style="padding:2px 8px; font-weight:700;" onclick="clearAdvSearch()">-</button>
                     </div>
                     <div style="margin-top:10px;">
-                        <a href="#" style="color:var(--accent-pink); font-size:12px; text-decoration:none; font-weight:700;">+ Add Search Criterion</a>
+                        <a href="javascript:void(0)" style="color:var(--accent-pink); font-size:12px; text-decoration:none; font-weight:700;">+ Add Search Criterion</a>
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px;">
                         <button class="btn-action" onclick="performAdvancedSearch()" style="color:#3b82f6;">Search</button>
@@ -191,8 +191,8 @@
     </div>
 
     <!-- New Client Modal (Expanded) -->
-    <div id="add-client-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:2000; align-items:center; justify-content:center; padding:20px;">
-        <div class="card" style="max-width:950px; width:100%; max-height:95vh; overflow-y:auto; overflow-x:hidden; background:#fff; border-radius:8px; box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+    <div id="add-client-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:2000; align-items:flex-start; justify-content:center; padding-top:40px; padding-bottom:40px; padding-left:20px; padding-right:20px;">
+        <div class="card" style="max-width:950px; width:100%; max-height:calc(100vh - 80px); overflow-y:auto; overflow-x:hidden; background:#fff; border-radius:8px; box-shadow:0 20px 40px rgba(0,0,0,0.3);">
             <div class="card-header" style="background:#fff; border-bottom:1px solid #eee; padding:15px 25px; display:flex; justify-content:space-between; align-items:center;">
                 <h2 id="modal-title" style="color:var(--primary-blue); font-size:20px; font-weight:700; margin:0;">New Client</h2>
                 <button type="button" onclick="closeModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:#999; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#999'">×</button>
@@ -282,16 +282,16 @@
                         <div class="form-group" style="margin-bottom:15px;">
                             <label style="display:block; margin-bottom:5px; font-weight:600;">Office Phone</label>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                                <input type="text" id="nc-phone1" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
-                                <input type="text" id="nc-phone2" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                <input type="text" id="nc-phone1" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                <input type="text" id="nc-phone2" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
                             </div>
                         </div>
 
                         <div class="form-group" style="margin-bottom:15px;">
                             <label style="display:block; margin-bottom:5px; font-weight:600;">Cell Phone</label>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                                <input type="text" id="nc-cell1" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
-                                <input type="text" id="nc-cell2" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                <input type="text" id="nc-cell1" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                <input type="text" id="nc-cell2" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
                             </div>
                         </div>
 
@@ -815,3 +815,4 @@
     </script>
 </body>
 </html>
+

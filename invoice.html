@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-        @page { size: A4; margin: 0; }
+        @page { size: A4; margin: 5mm; }
         
         * { 
             box-sizing: border-box; 
@@ -32,7 +32,7 @@
             margin: 0 auto;
             background: #fff;
             padding: 15mm;
-            border: 1px solid #000;
+            border: 3px solid #000;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -41,7 +41,7 @@
 
         /* Header Layout */
         .header-section {
-            border-bottom: 2px solid #000;
+            border-bottom: 3px solid #000;
             padding-bottom: 5px;
             margin-bottom: 5px;
         }
@@ -159,12 +159,12 @@
         .invoice-table {
             width: 100%;
             border-collapse: collapse;
-            border: 2px solid #000;
+            border: 2px solid #000 !important;
             table-layout: fixed;
         }
 
         .invoice-table th {
-            border: 1.5px solid #000;
+            border: 1px solid #000 !important;
             padding: 8px 5px;
             font-size: 11px;
             font-weight: 800;
@@ -175,7 +175,7 @@
         }
 
         .invoice-table td {
-            border: 1.5px solid #000;
+            border: 1px solid #000 !important;
             padding: 6px 5px;
             font-size: 12px;
             font-weight: 600;
@@ -191,17 +191,14 @@
             font-weight: 800;
         }
 
-        /* Teeth Grid - Rigid 2x2 Layout */
         .teeth-chart {
             display: table;
             width: 100%;
-            max-width: 160px;
             table-layout: fixed;
             margin: 0 auto;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 13px;
             font-weight: 800;
-            background: #fff;
         }
         .teeth-row {
             display: table-row;
@@ -209,21 +206,22 @@
         .teeth-quad {
             display: table-cell;
             width: 50%;
-            height: 30px;
-            text-align: center;
+            height: 28px;
             vertical-align: middle;
-            padding: 3px;
-            white-space: normal;
-            word-wrap: break-word;
-            line-height: 1.2;
-            font-size: 10px;
+            white-space: nowrap;
+        }
+        .tooth-cell {
+            display: inline-block;
+            width: 12.5%;
+            text-align: center;
+            font-size: 13px;
             font-weight: 800;
         }
-        /* FDI Cross Borders - Consistent with Reference Image */
-        .teeth-quad.ur { border-right: 2px solid #000; border-bottom: 2px solid #000; }
-        .teeth-quad.ul { border-bottom: 2px solid #000; }
-        .teeth-quad.lr { border-right: 2px solid #000; }
-        .teeth-quad.ll { }
+        /* FDI Cross Borders - Aligned to midline */
+        .teeth-quad.ur { border-right: 1.5px solid #000; border-bottom: 1.5px solid #000; text-align: right; }
+        .teeth-quad.ul { border-bottom: 1.5px solid #000; text-align: left; }
+        .teeth-quad.lr { border-right: 1.5px solid #000; text-align: right; }
+        .teeth-quad.ll { text-align: left; }
 
         /* Totals Row */
         .total-summary-row td {
@@ -373,18 +371,21 @@
         .invoice-container.html2pdf-printing-container .invoice-table {
             width: 100% !important;
             table-layout: fixed !important;
+            border: 2px solid #000 !important;
         }
         .invoice-container.html2pdf-printing-container .invoice-table th {
             white-space: normal !important;
             word-wrap: break-word !important;
             font-size: 11px !important;
             padding: 8px 5px !important;
+            border: 1px solid #000 !important;
         }
         .invoice-container.html2pdf-printing-container .invoice-table td {
             white-space: normal !important;
             word-wrap: break-word !important;
             font-size: 12px !important;
             padding: 6px 5px !important;
+            border: 1px solid #000 !important;
         }
         .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(1) { width: 3% !important; }
         .invoice-container.html2pdf-printing-container .invoice-table th:nth-child(2) { width: 7% !important; }
@@ -400,7 +401,7 @@
             body { padding: 0; background: #fff; }
             .invoice-container { 
                 box-shadow: none; 
-                border: 1px solid #000;
+                border: 3px double #000 !important;
                 margin: 0;
                 width: 100%;
             }
@@ -468,13 +469,13 @@
                 <tr>
                     <th style="width: 3%;">#</th>
                     <th style="width: 7%;">Order #</th>
-                    <th style="width: 11%;">Patient</th>
-                    <th style="width: 11%;">Delivery Date</th>
-                    <th style="width: 15%;">Product</th>
-                    <th style="width: 22%;">Teeth #</th>
+                    <th style="width: 9%;">Patient</th>
+                    <th style="width: 9%;">Delivery Date</th>
+                    <th style="width: 14%;">Product</th>
+                    <th style="width: 28%;">Teeth #</th>
                     <th style="width: 7%;">Units</th>
                     <th style="width: 11%;">Rate /unit</th>
-                    <th style="width: 13%;">Total Amount</th>
+                    <th style="width: 12%;">Total Amount</th>
                 </tr>
             </thead>
             <tbody id="items-body">
@@ -564,21 +565,41 @@
                     if (quadrants[q]) quadrants[q].push(n);
                 });
 
-                const q1 = quadrants[1].sort((a, b) => b - a).join(',');
-                const q2 = quadrants[2].sort((a, b) => a - b).join(',');
-                const q3 = quadrants[3].sort((a, b) => a - b).join(',');
-                const q4 = quadrants[4].sort((a, b) => b - a).join(',');
+                // Helper to render 8 cells per quadrant
+                // UR (Q1) and LR (Q4) go from 8 down to 1
+                const renderQuadRight = (quad) => {
+                    let html = '';
+                    for (let i = 8; i >= 1; i--) {
+                        const hasTooth = quadrants[quad].includes(i);
+                        html += `<span class="tooth-cell">${hasTooth ? i : '&nbsp;'}</span>`;
+                    }
+                    return html;
+                };
 
+                // UL (Q2) and LL (Q3) go from 1 to 8
+                const renderQuadLeft = (quad) => {
+                    let html = '';
+                    for (let i = 1; i <= 8; i++) {
+                        const hasTooth = quadrants[quad].includes(i);
+                        html += `<span class="tooth-cell">${hasTooth ? i : '&nbsp;'}</span>`;
+                    }
+                    return html;
+                };
+
+                const q1Html = renderQuadRight(1);
+                const q2Html = renderQuadLeft(2);
+                const q3Html = renderQuadLeft(3);
+                const q4Html = renderQuadRight(4);
 
                 return `
                     <div class="teeth-chart">
                         <div class="teeth-row">
-                            <div class="teeth-quad ur">${q1}</div>
-                            <div class="teeth-quad ul">${q2}</div>
+                            <div class="teeth-quad ur">${q1Html}</div>
+                            <div class="teeth-quad ul">${q2Html}</div>
                         </div>
                         <div class="teeth-row">
-                            <div class="teeth-quad lr">${q4}</div>
-                            <div class="teeth-quad ll">${q3}</div>
+                            <div class="teeth-quad lr">${q4Html}</div>
+                            <div class="teeth-quad ll">${q3Html}</div>
                         </div>
                     </div>
                 `;
@@ -713,3 +734,4 @@
     </script>
 </body>
 </html>
+

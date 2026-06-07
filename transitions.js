@@ -18,6 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('visible');
     }, 100);
 
+    // Hide curtain after animation to prevent horizontal scrolling
+    setTimeout(() => {
+        curtain.style.display = 'none';
+    }, 900);
+
     // 4. Intercept link clicks
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
@@ -56,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             content.innerText = pageName.toUpperCase();
             
             // Close curtain
+            curtain.style.display = 'block';
             curtain.classList.remove('opening');
             curtain.classList.add('closing');
 
@@ -69,9 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Handle back/forward cache
     window.addEventListener('pageshow', (event) => {
         if (event.persisted) {
+            curtain.style.display = 'block';
             curtain.classList.remove('closing');
             curtain.classList.add('opening');
             content.innerText = '';
+            
+            setTimeout(() => {
+                curtain.style.display = 'none';
+            }, 900);
         }
     });
 
@@ -105,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             reminder.innerHTML = `
                 <span><i class="fas fa-exclamation-triangle"></i> Reminder: Aapne 15 din se backup nahi liya hai. Kripya suraksha ke liye backup le lein.</span>
-                <a href="http://localhost:5000/api/backup/system" class="backup-now-btn" style="background:#f59e0b; color:white; text-decoration:none; padding:4px 12px; border-radius:4px; font-size:11px;">System Backup Karein</a>
+                <a href="/api/backup/system" class="backup-now-btn" style="background:#f59e0b; color:white; text-decoration:none; padding:4px 12px; border-radius:4px; font-size:11px;">System Backup Karein</a>
                 <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#b45309; cursor:pointer; font-size:16px;">&times;</button>
             `;
             document.body.prepend(reminder);
@@ -138,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <p style="font-size:13px; color:#6b7280; margin-bottom:20px;">Choose your preferred format for downloading lab data.</p>
                 <div style="display:grid; gap:12px;">
-                    <a href="http://localhost:5000/api/backup/orders-csv" class="export-opt" onclick="closeExportModal()">
+                    <a href="/api/backup/orders-csv" class="export-opt" onclick="closeExportModal()">
                         <div style="background:#dcfce7; color:#166534; padding:12px; border-radius:8px; display:flex; align-items:center; gap:12px; cursor:pointer;">
                             <i class="fas fa-file-excel" style="font-size:20px;"></i>
                             <div>
@@ -147,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </a>
-                    <a href="http://localhost:5000/api/backup/data" class="export-opt" onclick="closeExportModal()">
+                    <a href="/api/backup/data" class="export-opt" onclick="closeExportModal()">
                         <div style="background:#dbeafe; color:#1e40af; padding:12px; border-radius:8px; display:flex; align-items:center; gap:12px; cursor:pointer;">
                             <i class="fas fa-file-code" style="font-size:20px;"></i>
                             <div>
@@ -188,4 +199,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (reminder) reminder.remove();
         }
     }, true);
+
+    // 8. Global Select All Logic for Tables
+    document.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target.tagName.toLowerCase() === 'input' && target.type === 'checkbox') {
+            const th = target.closest('th');
+            if (th) {
+                const table = target.closest('table');
+                if (table) {
+                    const isChecked = target.checked;
+                    const tbodyCheckboxes = table.querySelectorAll('tbody input[type="checkbox"]');
+                    tbodyCheckboxes.forEach(cb => {
+                        cb.checked = isChecked;
+                    });
+                }
+            }
+        }
+    });
 });
+
+

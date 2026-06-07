@@ -19,11 +19,11 @@ function get(url) {
 async function test() {
     try {
         console.log("Checking Shipment Notes...");
-        const notes = await get('http://localhost:5000/api/shipment-notes');
+        const notes = await get('https://software-e857.onrender.com/api/shipment-notes');
         if (notes && notes.length > 0) {
             const id = notes[0].id;
             console.log(`Testing Shipment Note ID: ${id}`);
-            const data = await get(`http://localhost:5000/api/shipment-notes/${id}`);
+            const data = await get(`https://software-e857.onrender.com/api/shipment-notes/${id}`);
             console.log("Note Data Keys:", Object.keys(data));
             console.log("Orders count:", data.orders ? data.orders.length : 'N/A');
         } else {
@@ -34,3 +34,4 @@ async function test() {
     }
 }
 test();
+

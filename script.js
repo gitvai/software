@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
 
 // --- DATA FETCHING ---
 async function fetchData(endpoint) {
@@ -83,3 +83,4 @@ document.addEventListener('DOMContentLoaded', () => {
         loadRecentOrders();
     }, 30000);
 });
+

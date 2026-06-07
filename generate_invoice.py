@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import json
 import os
 from reportlab.lib.pagesizes import A4
@@ -76,7 +76,7 @@ def generate_invoice(data, output):
         logo = ""
 
     header_table_data = [[logo, Paragraph("<br/>".join(lab_address), styles["NormalSmall"]), Paragraph("<br/>".join(lab_contact), styles["NormalRight"])]]
-    header_table = Table(header_table_data, colWidths=[1.0*inch, 2.5*inch, 3.5*inch])
+    header_table = Table(header_table_data, colWidths=[75, 200, 250])
     header_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 5), ('LINEBELOW', (0,0), (-1,-1), 2, colors.black)]))
     elements.append(header_table)
 
@@ -92,7 +92,7 @@ def generate_invoice(data, output):
     
     info_table_data = [
         [
-            Paragraph(f"<b>{client.get('name','').upper()}</b><br/>{client.get('address','').upper()}", styles["NormalSmall"]),
+            Paragraph(f"<b>{(client.get('name') or '').upper()}</b><br/>{(client.get('address') or '').upper()}", styles["NormalSmall"]),
             [
                 Table([
                     [Paragraph("<b>Invoice #.</b>", styles["NormalSmall"]), Paragraph(f"<b>{invoice_no}</b>", styles["NormalRight"])],
@@ -104,7 +104,7 @@ def generate_invoice(data, output):
         ]
     ]
     
-    info_table = Table(info_table_data, colWidths=[4.1*inch, 3.0*inch])
+    info_table = Table(info_table_data, colWidths=[315, 210])
     info_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 1.5, colors.black), ('VALIGN', (0,0), (-1,-1), 'TOP'), ('LEFTPADDING', (0,0), (-1,-1), 8), ('RIGHTPADDING', (0,0), (-1,-1), 8), ('TOPPADDING', (0,0), (-1,-1), 8), ('BOTTOMPADDING', (0,0), (-1,-1), 8)]))
     elements.append(info_table)
     elements.append(Spacer(1, 15))
@@ -125,8 +125,8 @@ def generate_invoice(data, output):
         price = o.get("totalAmount") or o.get("price") or 0
         rate = price / units if units else 0
         
-        p_type = o.get('productType', '').strip()
-        p_name = o.get('productName', '').strip()
+        p_type = (o.get('productType') or '').strip()
+        p_name = (o.get('productName') or '').strip()
         product_desc = p_name if p_name else p_type
         shades = [o.get('shade1'), o.get('shade2'), o.get('shade3')]
         shades = [s for s in shades if s]
@@ -160,11 +160,11 @@ def generate_invoice(data, output):
 
             # Dental Chart 2x2 Cross
             grid_data = [
-                [Paragraph(",".join(map(str, quads[1])), styles["TableTeeth"]), Paragraph(",".join(map(str, quads[2])), styles["TableTeeth"])],
-                [Paragraph(",".join(map(str, quads[4])), styles["TableTeeth"]), Paragraph(",".join(map(str, quads[3])), styles["TableTeeth"])]
+                [Paragraph("".join(map(str, quads[1])), styles["TableTeeth"]), Paragraph("".join(map(str, quads[2])), styles["TableTeeth"])],
+                [Paragraph("".join(map(str, quads[4])), styles["TableTeeth"]), Paragraph("".join(map(str, quads[3])), styles["TableTeeth"])]
             ]
             # Use fixed column widths but allow dynamic row heights for alignment
-            teeth_grid = Table(grid_data, colWidths=[1.4*inch, 1.4*inch])
+            teeth_grid = Table(grid_data, colWidths=[54.5, 54.5])
             teeth_grid.setStyle(TableStyle([
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
                 ('LEFTPADDING', (0,0), (-1,-1), 2),
@@ -190,10 +190,10 @@ def generate_invoice(data, output):
 
     table_data.append(["", "", "", "", "", Paragraph("<b>Total :</b>", styles["TableTextRight"]), Paragraph(f"<b>{total_units}</b>", styles["TableTextCenter"]), "", Paragraph(f"<b>{total_amount:.2f}</b>", styles["TableTextRight"])])
 
-    col_widths = [0.3*inch, 0.6*inch, 0.8*inch, 0.7*inch, 1.0*inch, 2.9*inch, 0.3*inch, 0.5*inch, 0.6*inch]
+    col_widths = [20, 45, 65, 55, 80, 115, 35, 50, 60]
     items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
-    items_style = [('GRID', (0,0), (-1,-1), 1, colors.black), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,0), 'CENTER'), ('ALIGN', (0,-1), (-1,-1), 'RIGHT'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,0), 9)]
+    items_style = [('GRID', (0,0), (-1,-1), 1, colors.black), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,0), 'CENTER'), ('ALIGN', (0,-1), (-1,-1), 'RIGHT'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,0), 9), ('LEFTPADDING', (0,0), (-1,-1), 3), ('RIGHTPADDING', (0,0), (-1,-1), 3)]
     if len(table_data) > 2 and "Requested" in str(table_data[1][1]): items_style.append(('SPAN', (1,1), (8,1)))
     items_style.append(('SPAN', (0,-1), (4,-1)))
     
@@ -203,7 +203,7 @@ def generate_invoice(data, output):
 
     # ---------------- GRAND TOTAL BAR ----------------
     grand_total_data = [[Paragraph(f"<b>Grand Total : OMR {number_to_words(int(total_amount))}</b>", styles["Normal"]), Paragraph(f"<b>OMR : {total_amount:.2f}</b>", styles["NormalRight"])]]
-    grand_total_table = Table(grand_total_data, colWidths=[5.3*inch, 1.8*inch])
+    grand_total_table = Table(grand_total_data, colWidths=[375, 150])
     grand_total_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 1.5, colors.black), ('LEFTPADDING', (0,0), (-1,-1), 10), ('RIGHTPADDING', (0,0), (-1,-1), 10), ('TOPPADDING', (0,0), (-1,-1), 8), ('BOTTOMPADDING', (0,0), (-1,-1), 8)]))
     elements.append(grand_total_table)
 

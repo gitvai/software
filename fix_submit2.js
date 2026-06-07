@@ -1,0 +1,42 @@
+﻿const fs = require('fs');
+const path = require('path');
+const file = path.join(process.argv[2], 'new-order.html');
+
+let content = fs.readFileSync(file, 'utf8');
+
+const regex = /        async function submitOrder\(\) \{[\s\S]*?shade1:/;
+
+const replacement = \        async function submitOrder() {
+            if (!selectedClientId) {
+                alert("Please select a client first!");
+                return;
+            }
+            const patientName = document.getElementById('patient-name-detail').value || document.getElementById('patient-name').value;
+            // Removed patient name validation as requested
+            // Removed teeth selection validation as requested
+
+            const slabsContainer = document.getElementById('slabs-container');
+            const isSlabActive = slabsContainer && slabsContainer.style.display === 'block';
+
+            const customUnitContainer = document.getElementById('custom-unit-text-container');
+            let customTeethText = '';
+            if (customUnitContainer && customUnitContainer.style.display === 'block') {
+                customTeethText = document.getElementById('custom-unit-text').value;
+            }
+
+            const data = {
+                clientId: selectedClientId,
+                patientName: patientName,
+                productName: document.getElementById('selected-product-name').textContent,
+                productType: selectedProductType,
+                teethSelection: customTeethText ? customTeethText : document.getElementById('selected-teeth-list').value,
+                units: parseInt(document.getElementById('unit-count').value) || 0,
+                price: parseFloat(document.getElementById('total-price').value) || 0,
+                status: document.getElementById('order-status') ? document.getElementById('order-status').value : 'New',
+                receivedDate: document.getElementById('order-date-input') ? new Date(document.getElementById('order-date-input').value).toISOString() : new Date().toISOString(),
+                dueDate: document.getElementById('due-date-input') && document.getElementById('due-date-input').value ? new Date(document.getElementById('due-date-input').value).toISOString() : null,
+                shade1:\;
+
+content = content.replace(regex, replacement);
+fs.writeFileSync(file, content, 'utf8');
+console.log("Restored submitOrder function start.");

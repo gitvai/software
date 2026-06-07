@@ -240,36 +240,36 @@
         <aside style="width: 200px; background: #f3f4f6; border-right: 1px solid #ddd; padding: 0;">
             <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563;">Pickup Requests</div>
             <div class="sidebar-items">
-                <a href="#" class="sidebar-link active" onclick="showSection('pickup-search')">Search</a>
-                <a href="#" class="sidebar-link" onclick="showSection('do-pickups')">Do Pickups</a>
-                <a href="#" class="sidebar-link" onclick="showSection('create-orders')">Create Orders</a>
+                <a href="javascript:void(0)" class="sidebar-link active" onclick="showSection('pickup-search')">Search</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="showSection('do-pickups')">Do Pickups</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="showSection('create-orders')">Create Orders</a>
             </div>
             <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Orders
             </div>
             <div class="sidebar-items">
-                <a href="#" class="sidebar-link active" onclick="loadOrders('all', 'Search Orders')">Search</a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('In Production', 'In Production')">In Production
+                <a href="javascript:void(0)" class="sidebar-link active" onclick="loadOrders('all', 'Search Orders')">Search</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('In Production', 'In Production')">In Production
                     <span
                         style="float:right; width:10px; height:10px; background:#6366f1; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('Complete', 'Complete')">Complete <span
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Complete', 'Complete')">Complete <span
                         style="float:right; width:10px; height:10px; background:#10b981; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('On Hold', 'On Hold')">On Hold <span
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('On Hold', 'On Hold')">On Hold <span
                         style="float:right; width:10px; height:10px; background:#f59e0b; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('Cancelled', 'Cancelled')">Cancelled <span
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Cancelled', 'Cancelled')">Cancelled <span
                         style="float:right; width:10px; height:10px; background:#ef4444; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('Try In', 'Out for try in')">Out for try in <span
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Try In', 'Out for try in')">Out for try in <span
                         style="float:right; width:10px; height:10px; background:#ec4899; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('Delivered', 'Delivered')">Delivered <span
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Delivered', 'Delivered')">Delivered <span
                         style="float:right; width:10px; height:10px; background:#1e3a8a; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('overdue', 'OverDue')">OverDue <span
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('overdue', 'OverDue')">OverDue <span
                         style="float:right; width:10px; height:10px; background:#ef4444; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="#" class="sidebar-link" onclick="loadOrders('repeat', 'Repeat/Repair')">Repeat/Repair <span
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('repeat', 'Repeat/Repair')">Repeat/Repair <span
                         style="float:right; width:10px; height:10px; background:#9ca3af; border-radius:2px; margin-top:4px;"></span></a>
             </div>
             <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Backup &
                 Export</div>
             <div class="sidebar-items">
-                <a href="http://localhost:5000/api/backup/system" class="sidebar-link"><i
+                <a href="/api/backup/system" class="sidebar-link"><i
                         class="fas fa-file-archive"></i> System Backup (.zip)</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="showExportModal()"><i
                         class="fas fa-file-export"></i> Export Data</a>
@@ -489,7 +489,10 @@
             <!-- High-Detail Edit Order Section (Matching Screenshot) -->
             <div id="section-edit-order" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h1 style="font-size: 24px; color: #333; margin:0; font-weight: 700;">Edit Order</h1>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <h1 style="font-size: 24px; color: #333; margin:0; font-weight: 700;">Edit Order</h1>
+                        <button id="btn-resume-production-detail" class="btn-action primary" style="background:#10b981; color:#fff; display:none;" onclick="resumeProduction()">Resume Production</button>
+                    </div>
                     <div style="display:flex; border: 1px solid #ccc;">
                         <button id="eo-btn-detail" class="profile-tab active"
                             style="padding: 5px 20px; border:none; background:#fff; color:#ec4899; font-weight:700; cursor:pointer;"
@@ -560,6 +563,9 @@
                                 <button type="button" class="btn-outline"
                                     style="font-size: 11px; padding: 3px 10px; border-radius: 20px; background: #fdf2f8; border-color: #ec4899; color: #ec4899; font-weight: 600;"
                                     onclick="selectArchEdit('lower')">Lower Arch</button>
+                                <button type="button" class="btn-outline"
+                                    style="font-size: 11px; padding: 3px 10px; border-radius: 20px; background: #eff6ff; border-color: #3b82f6; color: #3b82f6; font-weight: 600;"
+                                    onclick="selectArchEdit('all')">Select All</button>
                                 <button type="button" class="btn-outline"
                                     style="font-size: 11px; padding: 3px 10px; border-radius: 20px;"
                                     onclick="clearTeethEdit()">Clear All</button>
@@ -664,12 +670,12 @@
                         </div>
                         <div style="margin-top:5px; color:#3b82f6; font-weight:700; font-size:14px;" id="eo-prod-name">
                             CLEAR RETAINER U/L</div>
-                        <div style="margin-top:2px; font-weight:700; display:flex; align-items:center; gap:5px;">
+                        <div id="eo-rate-container" style="margin-top:2px; font-weight:700; display:flex; align-items:center; gap:5px;">
                             <input type="number" id="eo-units" value="1"
                                 style="width:40px; padding:2px; border:1px solid #ccc;"
-                                oninput="updateEditOrderCalculation()"> Unit(s) @ <input type="number" id="eo-rate"
+                                oninput="updateEditOrderCalculation()"> Unit(s) @ <input type="number" step="any" id="eo-rate"
                                 value="0" style="width:70px; padding:2px; border:1px solid #ccc;"
-                                oninput="updateEditOrderCalculation(true)">
+                                oninput="updateEditOrderCalculation(true)" onchange="updateEditOrderCalculation(true)">
                             <span style="margin-left:40px;">Total charge: <span
                                     id="eo-total-charge-text">0</span></span>
                         </div>
@@ -679,21 +685,26 @@
                             style="display:none; border: 1px solid #ccc; padding: 10px; margin-top: 10px; font-size: 13px; background: #fafafa;">
                             <div style="font-weight:bold; margin-bottom:8px;">Slabs</div>
                             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                                <span>First <span id="eo-slab1-units-display" style="font-weight:bold;">0 / 1</span>
-                                    Units @</span>
-                                <input type="number" id="eo-slab1-rate" value="17"
+                                <span>First Tooth (<span id="eo-slab1-units-display" style="font-weight:bold;">0 / 1</span> Unit) @</span>
+                                <input type="number" step="any" id="eo-slab1-rate" value="17"
                                     style="width:70px; padding:4px; border:1px solid #ccc;"
-                                    oninput="updateEditOrderCalculation()">
+                                    oninput="updateEditOrderCalculation()" onchange="updateEditOrderCalculation()">
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                                <span>Remaining Teeth (<span id="eo-slab2-units-display" style="font-weight:bold;">0</span>
+                                    Units) @</span>
+                                <input type="number" step="any" id="eo-slab2-rate" value="2"
+                                    style="width:70px; padding:4px; border:1px solid #ccc;"
+                                    oninput="updateEditOrderCalculation()" onchange="updateEditOrderCalculation()">
                                 <span>per unit</span>
                             </div>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span>Remaining <span id="eo-slab2-units-display" style="font-weight:bold;">0</span>
-                                    Units @</span>
-                                <input type="number" id="eo-slab2-rate" value="2"
-                                    style="width:70px; padding:4px; border:1px solid #ccc;"
-                                    oninput="updateEditOrderCalculation()">
-                                <span>per unit</span>
+                            <div style="font-weight:bold; font-size:14px; color:#b91c1c; border-top:1px dashed #ccc; padding-top:8px;">
+                                Total Slab Charge: <span id="eo-slab-total-display">0.00</span>
                             </div>
+                        </div>
+                        <div id="eo-custom-unit-text-container" style="display:none; margin-top:10px;">
+                            <label style="font-weight:600; font-size:12px; color:#333;">Unit Description (if no teeth selected)</label>
+                            <textarea id="eo-custom-unit-text" rows="2" style="width:100%; padding:4px; border:1px solid #ccc;" placeholder="E.g. Upper right 3, 4, 5..."></textarea>
                         </div>
                         <button
                             style="position:absolute; right:10px; top:40px; background:#fff; border:1px solid #ccc; padding:2px 5px; color:#3b82f6;"
@@ -725,7 +736,24 @@
                         </div>
                         <div>
                             <div>Status</div>
-                            <div id="eo-status-text" style="font-weight:700;">Delivered on 29/04/26</div>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <select id="eo-status-select" style="width:110px; border:1px solid #ccc; padding:4px;">
+                                    <option value="New">New</option>
+                                    <option value="In Production">In Production</option>
+                                    <option value="Complete">Complete</option>
+                                    <option value="On Hold">On Hold</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Try In">Try In</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Repeat">Repeat</option>
+                                    <option value="Repair">Repair</option>
+                                </select>
+                                <div id="eo-status-text" style="font-weight:600; font-size:10px; color:#666;"></div>
+                            </div>
+                            <div id="eo-hold-reason-container" style="display:none; margin-top:5px;">
+                                <div>Hold Reason</div>
+                                <input type="text" id="eo-hold-reason" style="width:100%; border:1px solid #ccc; padding:4px;" placeholder="Reason for hold...">
+                            </div>
                         </div>
                     </div>
 
@@ -884,7 +912,7 @@
                         </div>
                         <div>
                             <label style="display:block; font-size:12px; margin-bottom:5px;">Order Status</label>
-                            <select id="filter-status" style="width:100%; padding:6px; border:1px solid #ccc;">
+                            <select id="filter-status" style="width:100%; padding:6px; border:1px solid #ccc;" onchange="loadOrders()">
                                 <option value="">Ignore</option>
                                 <option>New</option>
                                 <option>In Production</option>
@@ -905,14 +933,32 @@
                             </select>
                         </div>
                     </div>
-                    <div id="dynamic-date-filter-container"
-                        style="display: flex; gap: 15px; align-items: center; background: #f9fafb; padding: 10px; border: 1px solid #ddd;">
+                    <div id="dynamic-date-filter-container" style="display: none; gap: 15px; align-items: center; background: #f9fafb; padding: 10px; border: 1px solid #ddd; margin-bottom: 15px;">
+                        <div>
+                            <label style="display:block; font-size:12px; margin-bottom:5px;">Date Field</label>
+                            <select id="search-date-field" style="padding:6px; border:1px solid #ccc;" onchange="loadOrders()">
+                                <option>Order Date</option>
+                                <option>Due Date</option>
+                                <option>Status Date</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12px; margin-bottom:5px;">From Date</label>
+                            <input type="date" id="date-from" style="padding:6px; border:1px solid #ccc;" onchange="loadOrders()">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12px; margin-bottom:5px;">To Date</label>
+                            <input type="date" id="date-to" style="padding:6px; border:1px solid #ccc;" onchange="loadOrders()">
+                        </div>
+                        <div style="margin-top:20px;">
+                            <button class="btn-action primary" onclick="document.getElementById('date-from').value=''; document.getElementById('date-to').value=''; loadOrders();">Clear Dates</button>
+                        </div>
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
                         <span style="font-size:13px; font-weight:700; color: var(--accent-pink);">Client Search</span>
                         <input type="text" id="filter-client" placeholder="Name / Code / Cell / Email"
                             style="flex:1; padding:6px; border:1px solid #ccc;" oninput="loadOrders()">
-                        <a href="#" style="font-size:12px; color:#3b82f6; text-decoration:none;">Advanced Search</a>
+                        <a href="javascript:void(0)" onclick="const d=document.getElementById('dynamic-date-filter-container'); d.style.display = d.style.display === 'none' ? 'flex' : 'none';" style="font-size:12px; color:#3b82f6; text-decoration:none;">Toggle Advanced Search</a>
                     </div>
                 </div>
 
@@ -980,10 +1026,7 @@
                     <button class="btn-toolbar"><i class="fas fa-envelope"></i> Email</button>
                     <button class="btn-toolbar" onclick="exportToCSV()"><i class="fas fa-download"></i> Export</button>
 
-                    <button id="btn-generate-invoice" class="btn-toolbar"
-                        style="background: #10b981; color: #fff; border-color: #059669;"
-                        onclick="openConfirmInvoiceModal()"><i class="fas fa-file-invoice-dollar"></i> Generate
-                        Invoice</button>
+
 
                     <div style="margin-left:auto; display:flex; align-items:center;">
                         <a href="#" onclick="openGridSettingsModal(event)"
@@ -1472,11 +1515,6 @@
     </div>
 
     <script>
-        // Redirect to server if opened via file://
-        if (window.location.protocol === 'file:') {
-            window.location.href = 'http://127.0.0.1:5000/orders.html';
-        }
-
         const API_BASE = 'http://localhost:5000/api';
         let allClients = [];
         let currentClientId = null;
@@ -1858,7 +1896,7 @@
             alert('Delete functionality coming soon!');
         }
 
-        async function loadOrders(statusParam = null, title = null) {
+        async function loadOrders(statusParam = null, title = null, advParams = '') {
             if (title) document.getElementById('page-title').textContent = title;
             showSection('section-orders');
 
@@ -1882,6 +1920,7 @@
                 if (dateFrom) url += `dateFrom=${encodeURIComponent(dateFrom)}&`;
                 if (dateTo) url += `dateTo=${encodeURIComponent(dateTo)}&`;
                 url += `dateField=${dateFieldStr}&`;
+                if (advParams) url += advParams;
 
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('API Response Error');
@@ -1935,6 +1974,10 @@
                     const row = document.createElement('tr');
                     row.dataset.orderId = order.id;
                     const statusColor = getStatusColor(order.status);
+                    
+                    if (['On Hold', 'New', 'Try In', 'Cancelled'].includes(order.status)) {
+                        row.style.backgroundColor = statusColor + '15';
+                    }
 
                     let extraCols = '';
                     if (status === 'On Hold') {
@@ -2003,10 +2046,9 @@
                     rowHTML += extraCols;
                     rowHTML += `
                         <td>
-                            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
                                 <a href="javascript:void(0)" onclick="openEditModal(${order.id})" style="color:#3b82f6; text-decoration:none; font-size:12px; font-weight:600; padding:3px 8px; border:1px solid #3b82f6; border-radius:4px; white-space:nowrap;" title="Edit Order"><i class="fas fa-edit" style="margin-right:3px;"></i>Edit</a>
                                 <a href="javascript:void(0)" onclick="viewOrderInvoice(${order.id})" style="color:#6366f1; text-decoration:none; font-size:12px; font-weight:600; padding:3px 8px; border:1px solid #6366f1; border-radius:4px; white-space:nowrap;" title="View Invoice"><i class="fas fa-file-invoice" style="margin-right:3px;"></i>View Invoice</a>
-                                <a href="javascript:void(0)" onclick="generateInvoice(${order.id}, ${order.clientId})" style="color:#10b981; text-decoration:none; font-size:12px; font-weight:600; padding:3px 8px; border:1px solid #10b981; border-radius:4px; white-space:nowrap;" title="Generate Invoice"><i class="fas fa-file-invoice-dollar" style="margin-right:3px;"></i>Generate</a>
                             </div>
                         </td>
                     `;
@@ -2087,6 +2129,36 @@
             } catch (err) { console.error(err); }
         }
 
+        async function generateShipment(orderId, clientId) {
+            try {
+                const res = await fetch(`${API_BASE}/shipment-notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderIds: [orderId],
+                        clientId: clientId,
+                        noteNumber: 'SN-' + Date.now().toString().slice(-6),
+                        deliveryMode: 'Courier',
+                        notes: '',
+                        noteDate: new Date().toISOString()
+                    })
+                });
+                if (res.ok) {
+                    const note = await res.json();
+                    alert('Shipment Note generated successfully!');
+                    window.open(`delivery_note.html?id=${note.id}`, '_blank');
+                    if (typeof openClientDetail === 'function' && document.getElementById('client-details-overlay') && document.getElementById('client-details-overlay').style.display === 'block') {
+                        openClientDetail(clientId);
+                    } else {
+                        loadOrders();
+                    }
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) { console.error(err); }
+        }
+
         function viewOrderInvoice(id) {
             window.open(`invoice.html?id=${id}&type=order`, '_blank');
         }
@@ -2155,7 +2227,7 @@
                 receivedDate: document.getElementById('eo-date').value,
                 dueDate: document.getElementById('eo-due').value,
                 doctorName: document.getElementById('eo-sub-doctor') ? document.getElementById('eo-sub-doctor').value : null,
-                teethSelection: selectedTeeth.join(', '),
+                teethSelection: (document.getElementById('eo-custom-unit-text-container') && document.getElementById('eo-custom-unit-text-container').style.display === 'block' && document.getElementById('eo-custom-unit-text').value) ? document.getElementById('eo-custom-unit-text').value : selectedTeeth.join(', '),
                 deliveryMethod: document.getElementById('eo-delivery-method') ? document.getElementById('eo-delivery-method').value : null,
                 assignTo: document.getElementById('eo-assign-to') ? document.getElementById('eo-assign-to').value : null,
                 department: document.getElementById('eo-department') ? document.getElementById('eo-department').value : null,
@@ -2164,6 +2236,9 @@
                 productType: document.getElementById('eo-prod-name').dataset.type || 'General',
                 unitRate: parseFloat(document.getElementById('eo-rate').value) || 0,
                 units: unitsVal,
+                status: document.getElementById('eo-status-select').value,
+                holdReason: document.getElementById('eo-status-select').value === 'On Hold' ? (document.getElementById('eo-hold-reason') ? document.getElementById('eo-hold-reason').value : null) : null,
+                holdFrom: document.getElementById('eo-status-select').value === 'On Hold' ? new Date().toISOString() : null,
                 shades: JSON.stringify(shades),
                 slab1Rate: isSlabsVisible ? parseFloat(document.getElementById('eo-slab1-rate').value) : null,
                 slab2Rate: isSlabsVisible ? parseFloat(document.getElementById('eo-slab2-rate').value) : null,
@@ -2271,6 +2346,10 @@
                 if (slabsContainer) {
                     slabsContainer.style.display = isSlabProduct ? 'block' : 'none';
                 }
+                const customUnitContainer = document.getElementById('eo-custom-unit-text-container');
+                if (customUnitContainer) {
+                    customUnitContainer.style.display = isSlabProduct ? 'block' : 'none';
+                }
                 const stdRate = (order.slab1Rate !== null && order.slab1Rate !== undefined) ? order.slab1Rate : (order.units ? (order.totalAmount / order.units) : 17);
                 const s1 = document.getElementById('eo-slab1-rate');
                 if (s1) s1.value = stdRate;
@@ -2281,7 +2360,24 @@
                 document.getElementById('eo-patient-name').value = order.patientName || '';
 
                 const statusDate = order.statusDate || order.updatedAt || order.receivedDate;
-                document.getElementById('eo-status-text').textContent = `${order.status} on ${new Date(statusDate).toLocaleDateString('en-GB')}`;
+                const statusSelect = document.getElementById('eo-status-select');
+                statusSelect.value = order.status || 'New';
+                document.getElementById('eo-status-text').textContent = `on ${new Date(statusDate).toLocaleDateString('en-GB')}`;
+                
+                const holdReasonContainer = document.getElementById('eo-hold-reason-container');
+                if (holdReasonContainer) {
+                    holdReasonContainer.style.display = (order.status === 'On Hold') ? 'block' : 'none';
+                }
+                const holdReasonInput = document.getElementById('eo-hold-reason');
+                if (holdReasonInput) {
+                    holdReasonInput.value = order.holdReason || '';
+                }
+                
+                statusSelect.onchange = function() {
+                    if (holdReasonContainer) {
+                        holdReasonContainer.style.display = (this.value === 'On Hold') ? 'block' : 'none';
+                    }
+                };
 
                 // Reset teeth UI and select if any
                 document.querySelectorAll('.tooth-num').forEach(t => t.classList.remove('selected'));
@@ -2329,7 +2425,10 @@
         function selectArchEdit(arch) {
             const upper = ['18', '17', '16', '15', '14', '13', '12', '11', '21', '22', '23', '24', '25', '26', '27', '28'];
             const lower = ['48', '47', '46', '45', '44', '43', '42', '41', '31', '32', '33', '34', '35', '36', '37', '38'];
-            const target = arch === 'upper' ? upper : lower;
+            let target = [];
+            if (arch === 'upper') target = upper;
+            else if (arch === 'lower') target = lower;
+            else if (arch === 'all') target = [...upper, ...lower];
 
             document.querySelectorAll('#section-edit-order .tooth-num').forEach(el => {
                 if (target.includes(el.getAttribute('data-tooth'))) {
@@ -2366,9 +2465,18 @@
 
                 total = (slab1Units * slab1Rate) + (slab2Units * slab2Rate);
                 document.getElementById('eo-rate').value = units > 0 ? (total / units).toFixed(2) : 0;
+                
+                const slabTotalDisp = document.getElementById('eo-slab-total-display');
+                if (slabTotalDisp) slabTotalDisp.textContent = total.toFixed(2);
+                
+                const rc = document.getElementById('eo-rate-container');
+                if (rc) rc.style.display = 'none';
             } else {
                 const rate = parseFloat(document.getElementById('eo-rate').value) || 0;
                 total = units * rate;
+                
+                const rc = document.getElementById('eo-rate-container');
+                if (rc) rc.style.display = 'flex';
             }
 
             document.getElementById('eo-total-charge-text').textContent = total.toFixed(2);
@@ -2453,6 +2561,24 @@
 
         // Duplicates removed
 
+        async function resumeProduction() {
+            const id = document.getElementById('eo-id').value;
+            if (!confirm("Resume production for this case?")) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/orders/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'In Production', holdFrom: null, holdReason: null })
+                });
+                if (res.ok) {
+                    alert("Case resumed!");
+                    showSection('section-orders');
+                    loadOrders();
+                }
+            } catch (err) { console.error(err); }
+        }
+
         async function bulkUpdateStatus(newStatus) {
             const selectedIds = Array.from(document.querySelectorAll('#orders-table tbody input[type="checkbox"]:checked'))
                 .map(cb => cb.closest('tr').dataset.orderId);
@@ -2486,6 +2612,11 @@
                 alert("Bulk update successful!");
                 loadOrders();
             } catch (err) { console.error(err); alert("Error during bulk update."); }
+        }
+
+        function toggleSelectAll(master) {
+            const checkboxes = document.querySelectorAll('#orders-table tbody input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = master.checked);
         }
 
         function downloadInvoicePDF(id) {
@@ -2662,6 +2793,15 @@
                     }
                 });
             }
+
+            // Prevent default behavior of sidebar links
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (link.getAttribute('href') === 'javascript:void(0)' || link.getAttribute('href') === '#') {
+                        e.preventDefault();
+                    }
+                });
+            });
         });
         async function openConfirmInvoiceModal() {
             const selectedIds = Array.from(document.querySelectorAll('#orders-table tbody input[type="checkbox"]:checked'))
@@ -2826,6 +2966,54 @@
             closeConfirmInvoiceModal();
             loadOrders();
         }
+        function createTeethGrid(selection) {
+            if (!selection || selection.trim() === "") return 'N/A';
+            try {
+                const teeth = selection.split(',').map(s => s.trim()).filter(s => s !== "");
+                const quadrants = { 1: [], 2: [], 3: [], 4: [] };
+                teeth.forEach(t => {
+                    const val = parseInt(t);
+                    if (isNaN(val)) return;
+                    let q = Math.floor(val / 10);
+                    const n = val % 10;
+                    if (q === 5) q = 1;
+                    if (q === 6) q = 2;
+                    if (q === 7) q = 3;
+                    if (q === 8) q = 4;
+                    if (quadrants[q]) quadrants[q].push(n);
+                });
+                const renderQuadRight = (quad) => {
+                    let html = '';
+                    for (let i = 8; i >= 1; i--) {
+                        const hasTooth = quadrants[quad].includes(i);
+                        html += `<span style="display:inline-block;width:11px;text-align:center;font-size:10px;font-weight:700;font-family:Courier New,monospace;">${hasTooth ? i : '&nbsp;'}</span>`;
+                    }
+                    return html;
+                };
+                const renderQuadLeft = (quad) => {
+                    let html = '';
+                    for (let i = 1; i <= 8; i++) {
+                        const hasTooth = quadrants[quad].includes(i);
+                        html += `<span style="display:inline-block;width:11px;text-align:center;font-size:10px;font-weight:700;font-family:Courier New,monospace;">${hasTooth ? i : '&nbsp;'}</span>`;
+                    }
+                    return html;
+                };
+                return `
+                    <div style="display:table;width:180px;table-layout:fixed;margin:0;border-collapse:collapse;">
+                        <div style="display:table-row;">
+                            <div style="display:table-cell;width:50%;height:20px;vertical-align:middle;white-space:nowrap;padding:2px 0;border-right:1.5px solid #333;border-bottom:1.5px solid #333;text-align:right;">${renderQuadRight(1)}</div>
+                            <div style="display:table-cell;width:50%;height:20px;vertical-align:middle;white-space:nowrap;padding:2px 0;border-bottom:1.5px solid #333;text-align:left;">${renderQuadLeft(2)}</div>
+                        </div>
+                        <div style="display:table-row;">
+                            <div style="display:table-cell;width:50%;height:20px;vertical-align:middle;white-space:nowrap;padding:2px 0;border-right:1.5px solid #333;text-align:right;">${renderQuadRight(4)}</div>
+                            <div style="display:table-cell;width:50%;height:20px;vertical-align:middle;white-space:nowrap;padding:2px 0;text-align:left;">${renderQuadLeft(3)}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                return selection;
+            }
+        }
         async function bulkPrintOrders(type) {
             const selectedCbs = document.querySelectorAll('.order-checkbox:checked');
             if (selectedCbs.length === 0) {
@@ -2893,7 +3081,7 @@
                                         <div class="row"><span class="label">Client:</span> <span class="value">${o.client ? o.client.name : 'N/A'}</span></div>
                                         <div class="row"><span class="label">Patient:</span> <span class="value">${o.patientName}</span></div>
                                         <div class="row"><span class="label">Product:</span> <span class="value">${o.productName || o.productType}</span></div>
-                                        <div class="row"><span class="label">Teeth:</span> <span class="value">${o.teethSelection || 'N/A'}</span></div>
+                                        <div class="row"><span class="label">Teeth:</span> <span class="value">${createTeethGrid(o.teethSelection)}</span></div>
                                         <div class="row"><span class="label">Due Date:</span> <span class="value">${o.dueDate ? new Date(o.dueDate).toLocaleDateString() : ''}</span></div>
                                         <div style="margin-top:10px; font-size:12px; color:#666;">Instructions: ${o.specialInstructions || 'None'}</div>
                                     </div>

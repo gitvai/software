@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://software-e857.onrender.com/api';
 
 async function testBackend() {
   try {
@@ -74,3 +74,4 @@ async function testBackend() {
 }
 
 testBackend();
+

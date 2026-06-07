@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -484,32 +484,26 @@
                         </div>
 
                         <div class="teeth-footer">
-                            <div class="footer-field"><label>Teeth</label><input type="text" id="selected-teeth-list"
-                                    readonly></div>
-                            <div class="footer-field"><label>Units</label><input type="number" id="unit-count"
-                                    value="0"></div>
-                            <div class="footer-field"><label>Unit Rate</label><input type="number" id="unit-rate"
-                                    value="0" oninput="updateTeethUI(true)"></div>
-                            <div class="footer-field"><label>Total</label><input type="number" id="total-price"
-                                    value="0" readonly></div>
+                            <div class="footer-field"><label>Teeth</label><input type="text" id="selected-teeth-list" readonly></div>
+                            <div class="footer-field"><label>Units</label><input type="number" id="unit-count" value="0" oninput="updateTeethUI(false, true)"></div>
+                            <div class="footer-field" id="footer-unit-rate-container"><label>Unit Rate</label><input type="number" id="unit-rate" value="0" oninput="updateTeethUI(true)"></div>
+                            <div class="footer-field" id="footer-total-price-container"><label>Total</label><input type="number" id="total-price" value="0" readonly></div>
                         </div>
+
                         <!-- Slabs for RPD Products -->
-                        <div id="slabs-container"
-                            style="display:none; border: 1px solid #ccc; padding: 10px; margin-top: 10px; font-size: 13px; background: #fafafa;">
-                            <div style="font-weight:bold; margin-bottom:8px;">Slabs</div>
+                        <div id="slabs-container" style="display:none; border: 1px solid #ccc; padding: 10px; margin-top: 10px; font-size: 13px; background: #fafafa;">
+                            <div style="font-weight:bold; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;"><span>Slabs</span><div style="font-weight:normal;"><label style="margin-right:5px; font-weight:600;">Total Units:</label><input type="number" id="slab-total-units" value="0" min="0" style="width:60px; padding:4px; border:1px solid #ccc; border-radius:4px;" oninput="document.getElementById('unit-count').value = this.value; updateTeethUI(false, true)"></div></div>
                             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                                <span>First <span id="slab1-units-display" style="font-weight:bold;">0 / 1</span> Units
-                                    @</span>
-                                <input type="number" id="slab1-rate" value="17"
-                                    style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()">
+                                <span>First Tooth (<span id="slab1-units-display" style="font-weight:bold;">0 / 1</span> Unit) @</span>
+                                <input type="number" step="any" id="slab1-rate" value="17" style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()" onchange="updateTeethUI()">
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                                <span>Remaining Teeth (<span id="slab2-units-display" style="font-weight:bold;">0</span> Units) @</span>
+                                <input type="number" step="any" id="slab2-rate" value="2" style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()" onchange="updateTeethUI()">
                                 <span>per unit</span>
                             </div>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span>Remaining <span id="slab2-units-display" style="font-weight:bold;">0</span> Units
-                                    @</span>
-                                <input type="number" id="slab2-rate" value="2"
-                                    style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()">
-                                <span>per unit</span>
+                            <div style="font-weight:bold; font-size:14px; color:#b91c1c; border-top:1px dashed #ccc; padding-top:8px;">
+                                Total Slab Charge: <span id="slab-total-display">0.00</span>
                             </div>
                         </div>
 
@@ -765,11 +759,6 @@
     </div>
 
     <script>
-        // Redirect to server if opened via file://
-        if (window.location.protocol === 'file:') {
-            window.location.href = 'http://127.0.0.1:5000/new-order.html';
-        }
-
         const API_BASE = 'http://localhost:5000/api';
         let allClients = [];
         let selectedClientId = null;
@@ -1078,15 +1067,29 @@
             updateTeethUI();
         }
 
-        function updateTeethUI(fromRateInput = false) {
-            const unitCount = selectedTeeth.length;
+        function updateTeethUI(fromRateInput = false, fromUnitInput = false) {
+            let unitCount;
+            if (fromUnitInput) {
+                // User is typing in the box. Read the value but don't write back to it.
+                unitCount = parseInt(document.getElementById('unit-count').value) || 0;
+            } else if (fromRateInput) {
+                // Rate changed, keep the manual unit count if no teeth are selected
+                unitCount = parseInt(document.getElementById('unit-count').value) || 0;
+                if (selectedTeeth.length > 0 && unitCount === 0) {
+                    unitCount = selectedTeeth.length;
+                    document.getElementById('unit-count').value = unitCount;
+                }
+            } else {
+                // Triggered by tooth selection or product change.
+                unitCount = selectedTeeth.length;
+                document.getElementById('unit-count').value = unitCount;
+            }
             document.getElementById('selected-teeth-list').value = selectedTeeth.sort().join(', ');
-            document.getElementById('unit-count').value = unitCount;
 
             const slabsContainer = document.getElementById('slabs-container');
             const isSlabActive = slabsContainer && slabsContainer.style.display === 'block';
 
-            if (isSlabActive && !fromRateInput) {
+            if (isSlabActive) {
                 const slab1Rate = parseFloat(document.getElementById('slab1-rate').value) || 0;
                 const slab2Rate = parseFloat(document.getElementById('slab2-rate').value) || 0;
 
@@ -1094,16 +1097,32 @@
                 let slab2Units = Math.max(0, unitCount - 1);
 
                 document.getElementById('slab1-units-display').textContent = `${slab1Units} / 1`;
+                if(document.getElementById('slab-total-units')) document.getElementById('slab-total-units').value = unitCount;
                 document.getElementById('slab2-units-display').textContent = slab2Units;
 
                 const total = (slab1Units * slab1Rate) + (slab2Units * slab2Rate);
-                document.getElementById('total-price').value = total;
+                document.getElementById('total-price').value = total.toFixed(2);
                 // Set the average/base rate in the unit-rate field for reference
                 const ur = document.getElementById('unit-rate');
                 if (ur) ur.value = unitCount > 0 ? (total / unitCount).toFixed(2) : 0;
+                
+                const slabTotalDisp = document.getElementById('slab-total-display');
+                if (slabTotalDisp) slabTotalDisp.textContent = total.toFixed(2);
+                
+                // Hide normal unit rate & total
+                const urc = document.getElementById('footer-unit-rate-container');
+                if (urc) urc.style.display = 'none';
+                const tpc = document.getElementById('footer-total-price-container');
+                if (tpc) tpc.style.display = 'flex';
             } else {
                 const rate = parseFloat(document.getElementById('unit-rate').value) || 0;
-                document.getElementById('total-price').value = unitCount * rate;
+                document.getElementById('total-price').value = (unitCount * rate).toFixed(2);
+                
+                // Show normal unit rate & total
+                const urc = document.getElementById('footer-unit-rate-container');
+                if (urc) urc.style.display = 'flex';
+                const tpc = document.getElementById('footer-total-price-container');
+                if (tpc) tpc.style.display = 'flex';
             }
         }
 

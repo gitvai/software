@@ -92,7 +92,7 @@ model Order {
   gender       String?
   age          Int?
   
-  productType  String    
+  productType  String?    
   productName  String?   
   material     String?
   
@@ -161,6 +161,7 @@ model Order {
   warranty     Warranty?
   pickupReturns PickupReturn[]
   media        Media[]
+  jobs         OrderJob[]
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -169,6 +170,35 @@ model Order {
   holdReason     String?
   cancelledOn    DateTime?
   cancelledReason String?
+}
+
+model OrderJob {
+  id             Int      @id @default(autoincrement())
+  orderId        Int
+  order          Order    @relation(fields: [orderId], references: [id])
+  
+  productType    String    
+  productName    String?   
+  material       String?
+  teethSelection String? 
+  
+  shade1         String?
+  shade2         String?
+  shade3         String?
+  shadeNotes     String?
+  stumpShade     String?
+  
+  units          Int      @default(1)
+  price          Float    @default(0) // Unit Rate
+  totalAmount    Float    @default(0) // units * price or slab calc
+  
+  slab1Rate      Float?
+  slab2Rate      Float?
+  slab1Units     Int?
+  slab2Units     Int?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Media {

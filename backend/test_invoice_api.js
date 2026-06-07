@@ -12,14 +12,14 @@ function get(url) {
 
 async function test() {
     try {
-        const invoices = await get('http://localhost:5000/api/invoices');
+        const invoices = await get('https://software-e857.onrender.com/api/invoices');
         if (!invoices || invoices.length === 0) {
             console.log("No invoices found.");
             return;
         }
         const id = invoices[0].id;
         console.log(`Testing Invoice ID: ${id}`);
-        const data = await get(`http://localhost:5000/api/invoices/${id}`);
+        const data = await get(`https://software-e857.onrender.com/api/invoices/${id}`);
         console.log("Invoice Data Keys:", Object.keys(data));
         console.log("Orders count:", data.orders ? data.orders.length : 'N/A');
         if (data.orders && data.orders.length > 0) {
@@ -30,3 +30,4 @@ async function test() {
     }
 }
 test();
+

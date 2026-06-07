@@ -264,25 +264,32 @@
                         </div>
 
                         <div class="teeth-footer">
-                            <div class="footer-field"><label>Teeth</label><input type="text" id="selected-teeth-list" readonly></div>
-                            <div class="footer-field"><label>Units</label><input type="number" id="unit-count" value="0" oninput="updateTeethUI()"></div>
-                            <div class="footer-field"><label>Unit Rate</label><input type="number" id="unit-rate" value="0" oninput="updateTeethUI(true)"></div>
-                            <div class="footer-field"><label>Total</label><input type="number" id="total-price" value="0" readonly></div>
+                            <div class="footer-field"><label>Teeth</label><input type="text" id="selected-teeth-list" oninput="handleTeethManualInput(this.value)"></div>
+                            <div class="footer-field"><label>Units</label><input type="number" id="unit-count" value="0" oninput="updateTeethUI(false, false, true)"></div>
+                            <div class="footer-field" id="footer-unit-rate-container"><label>Unit Rate</label><input type="number" id="unit-rate" value="0" oninput="updateTeethUI(true)"></div>
+                            <div class="footer-field" id="footer-total-price-container"><label>Total</label><input type="number" id="total-price" value="0" readonly></div>
                         </div>
 
                         <!-- Slabs for RPD Products -->
                         <div id="slabs-container" style="display:none; border: 1px solid #ccc; padding: 10px; margin-top: 10px; font-size: 13px; background: #fafafa;">
-                            <div style="font-weight:bold; margin-bottom:8px;">Slabs</div>
+                            <div style="font-weight:bold; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;"><span>Slabs</span><div style="font-weight:normal;"><label style="margin-right:5px; font-weight:600;">Total Units:</label><input type="number" id="slab-total-units" value="0" min="0" style="width:60px; padding:4px; border:1px solid #ccc; border-radius:4px;" oninput="document.getElementById('unit-count').value = this.value; updateTeethUI(false, true)"></div></div>
                             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                                <span>First <span id="slab1-units-display" style="font-weight:bold;">0 / 1</span> Units @</span>
-                                <input type="number" id="slab1-rate" value="17" style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()">
+                                <span>First Tooth (<span id="slab1-units-display" style="font-weight:bold;">0 / 1</span> Unit) @</span>
+                                <input type="number" step="any" id="slab1-rate" value="17" style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()" onchange="updateTeethUI()">
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                                <span>Remaining Teeth (<span id="slab2-units-display" style="font-weight:bold;">0</span> Units) @</span>
+                                <input type="number" step="any" id="slab2-rate" value="2" style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()" onchange="updateTeethUI()">
                                 <span>per unit</span>
                             </div>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span>Remaining <span id="slab2-units-display" style="font-weight:bold;">0</span> Units @</span>
-                                <input type="number" id="slab2-rate" value="2" style="width:70px; padding:4px; border:1px solid #ccc;" oninput="updateTeethUI()">
-                                <span>per unit</span>
+                            <div style="font-weight:bold; font-size:14px; color:#b91c1c; border-top:1px dashed #ccc; padding-top:8px;">
+                                Total Slab Charge: <span id="slab-total-display">0.00</span>
                             </div>
+                        </div>
+
+                        <div id="custom-unit-text-container" style="display:none; margin-top:10px;">
+                            <label style="font-weight:600; font-size:12px; color:#333;">Unit Description (if no teeth selected)</label>
+                            <textarea id="custom-unit-text" rows="2" style="width:100%; padding:4px; border:1px solid #ccc;" placeholder="E.g. Upper right 3, 4, 5..."></textarea>
                         </div>
                         
                         <div style="margin-top:20px; display:flex; gap:10px;">
@@ -444,11 +451,6 @@
     </div>
 
     <script>
-        // Redirect to server if opened via file://
-        if (window.location.protocol === 'file:') {
-            window.location.href = 'http://127.0.0.1:5000/new-order.html';
-        }
-
         const API_BASE = 'http://localhost:5000/api';
         let allClients = [];
         let selectedClientId = null;
@@ -549,7 +551,8 @@
         async function refreshProducts() {
             const searchInput = document.getElementById('product-search');
             const search = searchInput ? searchInput.value : '';
-            const type = 'All Product Types';
+            const typeSelect = document.getElementById('product-type-filter');
+            const type = typeSelect ? typeSelect.value : 'All Product Types';
             
             let url = `${API_BASE}/products?`;
             if (search) url += `search=${encodeURIComponent(search)}&`;
@@ -594,6 +597,7 @@
             const slabsContainer = document.getElementById('slabs-container');
 
             if (productArea) productArea.style.display = 'none';
+            if (productArea) productArea.style.display = 'none';
             if (teethArea) teethArea.style.display = 'block';
             
             // Show slabs only for specific products
@@ -604,6 +608,12 @@
             if (slabsContainer) {
                 slabsContainer.style.display = isSlabProduct ? 'block' : 'none';
             }
+            
+            const customUnitTextContainer = document.getElementById('custom-unit-text-container');
+            if (customUnitTextContainer) {
+                customUnitTextContainer.style.display = isSlabProduct ? 'block' : 'none';
+            }
+            
             if (isSlabProduct) {
                 const s1 = document.getElementById('slab1-rate');
                 if (s1) s1.value = p.charge || 0;
@@ -612,6 +622,7 @@
             }
 
             const nameDisplay = document.getElementById('selected-product-name');
+
             const rateInput = document.getElementById('unit-rate');
             
             if (nameDisplay) nameDisplay.textContent = p.name;
@@ -656,32 +667,90 @@
             updateTeethUI();
         }
 
-        function updateTeethUI(fromRateInput = false) {
-            const unitCount = selectedTeeth.length;
-            document.getElementById('selected-teeth-list').value = selectedTeeth.sort().join(', ');
-            document.getElementById('unit-count').value = unitCount;
+        function handleTeethManualInput(val) {
+            const matches = val.match(/\d+/g) || [];
+            selectedTeeth = matches.map(Number);
             
+            document.querySelectorAll('.tooth-num').forEach(el => {
+                const onclickAttr = el.getAttribute('onclick');
+                if (onclickAttr) {
+                    const match = onclickAttr.match(/toggleTooth\(this,\s*(\d+)\)/);
+                    if (match) {
+                        const toothNum = parseInt(match[1]);
+                        if (selectedTeeth.includes(toothNum)) {
+                            el.classList.add('selected');
+                        } else {
+                            el.classList.remove('selected');
+                        }
+                    }
+                }
+            });
+            updateTeethUI(false, true, false);
+        }
+
+        function updateTeethUI(fromRateInput = false, fromManualTeeth = false, fromManualUnit = false) {
+            let unitCount;
+            if (fromManualUnit) {
+                unitCount = parseInt(document.getElementById('unit-count').value) || 0;
+            } else {
+                unitCount = selectedTeeth.length;
+                document.getElementById('unit-count').value = unitCount;
+            }
+            
+            if (!fromManualTeeth) {
+                document.getElementById('selected-teeth-list').value = selectedTeeth.sort().join(', ');
+            }
+            
+            const rateInput = document.getElementById('unit-rate');
+            const slab1RateInput = document.getElementById('slab1-rate');
+            const slab2RateInput = document.getElementById('slab2-rate');
+            const totalText = document.getElementById('total-price');
+
+            let total = 0;
             const slabsContainer = document.getElementById('slabs-container');
             const isSlabActive = slabsContainer && slabsContainer.style.display === 'block';
 
-            if (isSlabActive && !fromRateInput) {
-                const slab1Rate = parseFloat(document.getElementById('slab1-rate').value) || 0;
-                const slab2Rate = parseFloat(document.getElementById('slab2-rate').value) || 0;
+            if (isSlabActive) {
+                const s1Rate = parseFloat(slab1RateInput.value) || 0;
+                const s2Rate = parseFloat(slab2RateInput.value) || 0;
                 
                 let slab1Units = Math.min(unitCount, 1);
                 let slab2Units = Math.max(0, unitCount - 1);
                 
-                document.getElementById('slab1-units-display').textContent = `${slab1Units} / 1`;
-                document.getElementById('slab2-units-display').textContent = slab2Units;
+                const disp1 = document.getElementById('slab1-units-display');
+                const disp2 = document.getElementById('slab2-units-display');
+                if (disp1) disp1.textContent = `${slab1Units} / 1`;
+                if (disp2) disp2.textContent = slab2Units;
                 
-                const total = (slab1Units * slab1Rate) + (slab2Units * slab2Rate);
-                document.getElementById('total-price').value = total;
-                // Set the average/base rate in the unit-rate field for reference
-                document.getElementById('unit-rate').value = unitCount > 0 ? (total / unitCount).toFixed(2) : 0;
+                if (unitCount > 0) {
+                    total = s1Rate + (unitCount - 1) * s2Rate;
+                }
+                
+                const slabTotalDisp = document.getElementById('slab-total-display');
+                if (slabTotalDisp) slabTotalDisp.textContent = total.toFixed(2);
+                
+                // Average unit rate
+                if (rateInput && !fromRateInput) {
+                    rateInput.value = unitCount > 0 ? (total / unitCount).toFixed(2) : 0;
+                }
+                
+                // Hide normal unit rate & total
+                const urc = document.getElementById('footer-unit-rate-container');
+                if (urc) urc.style.display = 'none';
+                const tpc = document.getElementById('footer-total-price-container');
+                if (tpc) tpc.style.display = 'flex';
+                
             } else {
-                const rate = parseFloat(document.getElementById('unit-rate').value) || 0;
-                document.getElementById('total-price').value = unitCount * rate;
+                const rate = parseFloat(rateInput.value) || 0;
+                total = unitCount * rate;
+                
+                // Show normal unit rate & total
+                const urc = document.getElementById('footer-unit-rate-container');
+                if (urc) urc.style.display = 'flex';
+                const tpc = document.getElementById('footer-total-price-container');
+                if (tpc) tpc.style.display = 'flex';
             }
+            if (totalText) totalText.value = total.toFixed(2);
         }
 
         function showTab(tabName) {
@@ -720,10 +789,7 @@
         }
 
         function confirmTeeth() {
-            if (selectedTeeth.length === 0) {
-                alert('Please select at least one tooth.');
-                return;
-            }
+
             // Auto-fill patient name in the detailed form if it was entered earlier
             const topPatientName = document.getElementById('patient-name').value;
             if (topPatientName && !document.getElementById('patient-name-detail').value) {
@@ -739,17 +805,27 @@
                 alert('Please select a product first.');
                 return;
             }
-            if (selectedTeeth.length === 0) {
-                alert('Please select at least one tooth.');
-                return;
-            }
             
+            const slabsContainer = document.getElementById('slabs-container');
+            const isSlabActive = slabsContainer && slabsContainer.style.display === 'block';
+
+            const customUnitContainer = document.getElementById('custom-unit-text-container');
+            let customTeethText = '';
+            if (customUnitContainer && customUnitContainer.style.display === 'block') {
+                customTeethText = document.getElementById('custom-unit-text').value;
+            }
+
             const job = {
                 product: selectedProduct.name,
-                teeth: [...selectedTeeth],
+                productType: selectedProductType || 'General',
+                teeth: customTeethText ? [customTeethText] : [...selectedTeeth],
                 units: document.getElementById('unit-count').value,
                 rate: document.getElementById('unit-rate').value,
-                total: document.getElementById('total-price').value
+                total: document.getElementById('total-price').value,
+                slab1Rate: isSlabActive ? parseFloat(document.getElementById('slab1-rate').value) : null,
+                slab2Rate: isSlabActive ? parseFloat(document.getElementById('slab2-rate').value) : null,
+                slab1Units: isSlabActive ? Math.min(selectedTeeth.length, 1) : null,
+                slab2Units: isSlabActive ? Math.max(0, selectedTeeth.length - 1) : null
             };
             orderJobs.push(job);
             
@@ -760,6 +836,7 @@
             selectedTeeth = [];
             document.querySelectorAll('.tooth-num.selected').forEach(el => el.classList.remove('selected'));
             updateTeethUI();
+            if (customUnitContainer) document.getElementById('custom-unit-text').value = '';
             
             // Back to product selection
             cancelTeethSelection();
@@ -767,6 +844,7 @@
             alert('Job saved! You can now select another product.');
             console.log("Current Jobs:", orderJobs);
         }
+
 
         function renderJobsList() {
             const container = document.getElementById('jobs-container');
@@ -798,6 +876,7 @@
         }
 
         function cancelTeethSelection() {
+
             document.getElementById('product-selection-area').style.display = 'block';
             document.getElementById('teeth-selection-area').style.display = 'none';
         }
@@ -849,20 +928,23 @@
             }
             const patientName = document.getElementById('patient-name-detail').value || document.getElementById('patient-name').value;
             // Removed patient name validation as requested
-            if (selectedTeeth.length === 0) {
-                alert("Please select at least one tooth!");
-                return;
-            }
+            // Removed teeth selection validation as requested
 
             const slabsContainer = document.getElementById('slabs-container');
             const isSlabActive = slabsContainer && slabsContainer.style.display === 'block';
+
+            const customUnitContainer = document.getElementById('custom-unit-text-container');
+            let customTeethText = '';
+            if (customUnitContainer && customUnitContainer.style.display === 'block') {
+                customTeethText = document.getElementById('custom-unit-text').value;
+            }
 
             const data = {
                 clientId: selectedClientId,
                 patientName: patientName,
                 productName: document.getElementById('selected-product-name').textContent,
                 productType: selectedProductType,
-                teethSelection: document.getElementById('selected-teeth-list').value,
+                teethSelection: customTeethText ? customTeethText : document.getElementById('selected-teeth-list').value,
                 units: parseInt(document.getElementById('unit-count').value) || 0,
                 price: parseFloat(document.getElementById('total-price').value) || 0,
                 status: document.getElementById('order-status') ? document.getElementById('order-status').value : 'New',
@@ -1038,6 +1120,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadClients();
             loadStaff();
+            
+            // Add client search listener
+            const clientSearchInput = document.getElementById('client-search');
+            if (clientSearchInput) {
+                clientSearchInput.addEventListener('input', (e) => {
+                    const val = e.target.value.toLowerCase();
+                    const filtered = allClients.filter(c => 
+                        (c.name && c.name.toLowerCase().includes(val)) || 
+                        (c.code && c.code.toLowerCase().includes(val))
+                    );
+                    renderClients(filtered);
+                });
+            }
+
             const today = new Date().toISOString().split('T')[0];
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1204,3 +1300,4 @@
         </div>
     </div>
 </body>
+
