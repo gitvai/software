@@ -1354,8 +1354,8 @@
                 department: document.getElementById('department') ? document.getElementById('department').value : null,
                 slab1Rate: (document.getElementById('slabs-container') && document.getElementById('slabs-container').style.display === 'block') ? parseFloat(document.getElementById('slab1-rate').value) : null,
                 slab2Rate: (document.getElementById('slabs-container') && document.getElementById('slabs-container').style.display === 'block') ? parseFloat(document.getElementById('slab2-rate').value) : null,
-                slab1Units: (document.getElementById('slabs-container') && document.getElementById('slabs-container').style.display === 'block') ? Math.min(selectedTeeth.length, 1) : null,
-                slab2Units: (document.getElementById('slabs-container') && document.getElementById('slabs-container').style.display === 'block') ? Math.max(0, selectedTeeth.length - 1) : null
+                slab1Units: (document.getElementById('slabs-container') && document.getElementById('slabs-container').style.display === 'block') ? Math.min(parseInt(document.getElementById('unit-count').value)||0, 1) : null,
+                slab2Units: (document.getElementById('slabs-container') && document.getElementById('slabs-container').style.display === 'block') ? Math.max(0, (parseInt(document.getElementById('unit-count').value)||0) - 1) : null
             };
 
             try {

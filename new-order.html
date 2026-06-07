@@ -693,9 +693,13 @@
             if (fromManualUnit) {
                 unitCount = parseInt(document.getElementById('unit-count').value) || 0;
             } else {
-                unitCount = selectedTeeth.length;
-                document.getElementById('unit-count').value = unitCount;
-            }
+                  if (selectedTeeth.length > 0) {
+                      unitCount = selectedTeeth.length;
+                  } else {
+                      unitCount = parseInt(document.getElementById('unit-count').value) || 0;
+                  }
+                  document.getElementById('unit-count').value = unitCount;
+              }
             
             if (!fromManualTeeth) {
                 document.getElementById('selected-teeth-list').value = selectedTeeth.sort().join(', ');
@@ -824,8 +828,8 @@
                 total: document.getElementById('total-price').value,
                 slab1Rate: isSlabActive ? parseFloat(document.getElementById('slab1-rate').value) : null,
                 slab2Rate: isSlabActive ? parseFloat(document.getElementById('slab2-rate').value) : null,
-                slab1Units: isSlabActive ? Math.min(selectedTeeth.length, 1) : null,
-                slab2Units: isSlabActive ? Math.max(0, selectedTeeth.length - 1) : null
+                slab1Units: isSlabActive ? Math.min(parseInt(document.getElementById('unit-count').value)||0, 1) : null,
+                slab2Units: isSlabActive ? Math.max(0, (parseInt(document.getElementById('unit-count').value)||0) - 1) : null
             };
             orderJobs.push(job);
             
@@ -969,8 +973,8 @@
                 // Slabs data
                 slab1Rate: isSlabActive ? parseFloat(document.getElementById('slab1-rate').value) : null,
                 slab2Rate: isSlabActive ? parseFloat(document.getElementById('slab2-rate').value) : null,
-                slab1Units: isSlabActive ? Math.min(selectedTeeth.length, 1) : null,
-                slab2Units: isSlabActive ? Math.max(0, selectedTeeth.length - 1) : null
+                slab1Units: isSlabActive ? Math.min(parseInt(document.getElementById('unit-count').value)||0, 1) : null,
+                slab2Units: isSlabActive ? Math.max(0, (parseInt(document.getElementById('unit-count').value)||0) - 1) : null
             };
 
             try {
