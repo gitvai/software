@@ -134,8 +134,6 @@
         }
     </style>
     <script src="transitions.js"></script>
-    
-    <!-- Cache buster 1780828418756 -->
 </head>
 <body>
     <header>
@@ -224,7 +222,7 @@
                 <div class="card" style="padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h3>Products</h3>
-                        <button class="btn-action primary" onclick="try{openProductModal();}catch(e){alert('Error opening modal: '+e);}">+ Add New Product</button>
+                        <button class="btn-action primary" onclick="openProductModal()">+ Add New Product</button>
                     </div>
                     <div style="margin-bottom:15px; display:flex; gap:10px;">
                         <input type="text" id="prod-search-input" placeholder="Search products..." style="padding:8px; border:1px solid #ddd; border-radius:4px; flex:1;" oninput="fetchProducts()">
@@ -822,7 +820,7 @@
             try {
                 const search = document.getElementById('stock-search').value;
                 const category = document.getElementById('stock-category').value;
-                const res = await fetch(`${API_BASE}/materials?search=${search}&category=${category}` + ( `materials?search=${search}&category=${category}`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/materials?search=${search}&category=${category}`);
                 let materials = await res.json();
                 
                 if (currentStockFilter === 'Low') materials = materials.filter(m => (m.stock || 0) <= (m.reorderLevel || 10));
@@ -877,7 +875,7 @@
 
         async function viewMaterialDetails(id) {
             try {
-                const resMat = await fetch(`${API_BASE}/materials` + ( `materials`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const resMat = await fetch(`${API_BASE}/materials`);
                 const materials = await resMat.json();
                 const mat = materials.find(m => m.id === id);
                 if (!mat) {
@@ -921,7 +919,7 @@
                 const endDate = endVal ? new Date(endVal) : null;
                 if (endDate) endDate.setHours(23,59,59,999);
 
-                const res = await fetch(`${API_BASE}/inventory/transactions` + ( `inventory/transactions`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/inventory/transactions`);
                 const allTransactions = await res.json();
                 
                 const matTransactions = allTransactions
@@ -1091,7 +1089,7 @@
                 if (search) url += `search=${encodeURIComponent(search)}&`;
                 if (type) url += `type=${encodeURIComponent(type)}`;
 
-                const res = await fetch(url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now());
+                const res = await fetch(url);
                 const products = await res.json();
                 
                 const tbody = document.getElementById('products-tbody');
@@ -1101,13 +1099,13 @@
                         <td style="padding: 10px; border-bottom: 1px solid #eee;">${p.type || '-'}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee;">₹${p.charge || p.baseRate || 0}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                            <button class="btn-action" onclick="try{editProduct(${p.id});}catch(e){alert('Error editing: '+e);}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn-action" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i> Edit</button>
                         </td>
                     </tr>
                 `).join('');
 
                 // Also update the filter dropdown types dynamically
-                const allRes = await fetch(`${API_BASE}/products` + ( `products`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const allRes = await fetch(`${API_BASE}/products`);
                 const allProducts = await allRes.json();
                 const filterSelect = document.getElementById('prod-filter-type');
                 const currentValue = filterSelect.value;
@@ -1125,9 +1123,9 @@
             } catch (err) { console.error(err); }
         }
 
-        async function editProduct(id) { alert('Opening Edit Product Form!');
+        async function editProduct(id) {
             try {
-                const res = await fetch(`${API_BASE}/products/${id}` + ( `products/${id}`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/products/${id}`);
                 const p = await res.json();
                 document.getElementById('prod-id').value = p.id;
                 document.getElementById('prod-name').value = p.name;
@@ -1185,7 +1183,7 @@
 
         async function fetchExpenses() {
             try {
-                const res = await fetch(`${API_BASE}/expenses` + ( `expenses`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/expenses`);
                 const expenses = await res.json();
                 const list = document.getElementById('expense-list');
                 if (expenses.length === 0) {
@@ -1211,7 +1209,7 @@
 
         async function loadStaffOptions() {
             try {
-                const res = await fetch(`${API_BASE}/staff` + ( `staff`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/staff`);
                 const staff = await res.json();
                 const select = document.getElementById('exp-paid-to');
                 select.innerHTML = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -1220,7 +1218,7 @@
 
         async function fetchTransactions(type) {
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions?type=${type}` + ( `inventory/transactions?type=${type}`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/inventory/transactions?type=${type}`);
                 const transactions = await res.json();
                 renderTransactions(type, transactions);
             } catch (err) {
@@ -1317,7 +1315,7 @@
             
             // Fetch next voucher number
             try {
-                const res = await fetch(`${API_BASE}/expenses/next-number` + ( `expenses/next-number`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/expenses/next-number`);
                 const data = await res.json();
                 document.getElementById('inline-exp-voucher').value = data.nextNumber;
             } catch(e) {
@@ -1326,7 +1324,7 @@
             
             // Populate Paid To staff options
             try {
-                const res = await fetch(`${API_BASE}/staff` + ( `staff`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/staff`);
                 const staff = await res.json();
                 const select = document.getElementById('inline-exp-paid-to');
                 select.innerHTML = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -1384,7 +1382,7 @@
             
             // Fetch next inward document number
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Inward` + ( `inventory/transactions/next-number?type=Inward`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Inward`);
                 const data = await res.json();
                 document.getElementById('inward-doc-no').value = data.nextNumber;
             } catch(e) {
@@ -1405,7 +1403,7 @@
 
         async function loadSuppliersDropdowns() {
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions?type=Inward` + ( `inventory/transactions?type=Inward`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/inventory/transactions?type=Inward`);
                 const transactions = await res.json();
                 const uniqueSuppliers = [...new Set(transactions.map(t => t.supplier).filter(s => s))];
                 
@@ -1433,7 +1431,7 @@
 
         async function fetchSideMaterials(type) {
             try {
-                const res = await fetch(`${API_BASE}/materials?category=All` + ( `materials?category=All`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/materials?category=All`);
                 allMaterials = await res.json();
                 if (type === 'Inward') {
                     filterInwardMaterials();
@@ -1545,13 +1543,13 @@
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${index + 1}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee; font-weight:500; color:#1e3a8a;">${item.name} (${item.unit})</td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.quantity}" min="0.01" step="0.01" style="width:65px; padding:4px;" onchange="updateInwardItem(${item.materialId}, 'quantity', this.value)">
+                            <input type="number" value="${item.quantity}" min="0.01" step="0.01" style="width:65px; padding:4px;" oninput="updateInwardItem(${item.materialId}, 'quantity', this.value)">
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.rate}" min="0" step="0.01" style="width:80px; padding:4px;" onchange="updateInwardItem(${item.materialId}, 'rate', this.value)">
+                            <input type="number" value="${item.rate}" min="0" step="0.01" style="width:80px; padding:4px;" oninput="updateInwardItem(${item.materialId}, 'rate', this.value)">
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.taxPercent}" min="0" max="100" step="1" style="width:60px; padding:4px;" onchange="updateInwardItem(${item.materialId}, 'taxPercent', this.value)">
+                            <input type="number" value="${item.taxPercent}" min="0" max="100" step="1" style="width:60px; padding:4px;" oninput="updateInwardItem(${item.materialId}, 'taxPercent', this.value)">
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:right; font-weight:600;">₹${itemTotal.toFixed(2)}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">
@@ -1636,7 +1634,7 @@
             
             // Fetch next outward document number
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Outward` + ( `inventory/transactions/next-number?type=Outward`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Outward`);
                 const data = await res.json();
                 document.getElementById('outward-doc-no').value = data.nextNumber;
             } catch(e) {
@@ -1645,7 +1643,7 @@
             
             // Load recipients dropdown
             try {
-                const res = await fetch(`${API_BASE}/staff` + ( `staff`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/staff`);
                 const staff = await res.json();
                 const select = document.getElementById('outward-doc-recipient');
                 select.innerHTML = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -1764,7 +1762,7 @@
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${index + 1}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee; font-weight:500; color:#1e3a8a;">${item.name} (${item.unit})</td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
-                            <input type="number" value="${item.quantity}" min="0.01" max="${item.maxStock}" step="0.01" style="width:80px; padding:4px;" onchange="updateOutwardItem(${item.materialId}, this.value)">
+                            <input type="number" value="${item.quantity}" min="0.01" max="${item.maxStock}" step="0.01" style="width:80px; padding:4px;" oninput="updateOutwardItem(${item.materialId}, this.value)">
                             <span style="font-size:11px; color:#6b7280; margin-left:5px;">(Max: ${item.maxStock})</span>
                         </td>
                         <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">
@@ -1878,7 +1876,7 @@
         async function openOutwardModal() { 
             showInlineNewOutward();
         }
-        function openProductModal() { alert('Opening Add Product Form!'); 
+        function openProductModal() { 
             document.getElementById('prod-id').value = '';
             document.getElementById('prod-name').value = '';
             document.getElementById('prod-type').value = 'General';
@@ -1892,7 +1890,7 @@
 
         async function populateMaterialsDropdown() {
             try {
-                const res = await fetch(`${API_BASE}/materials?category=All` + ( `materials?category=All`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
+                const res = await fetch(`${API_BASE}/materials?category=All`);
                 const materials = await res.json();
                 const sel = document.getElementById('inv-material');
                 if (sel) sel.innerHTML = '<option value="">- Select Material -</option>' + 
@@ -1941,7 +1939,7 @@
                 <h3 id="prod-modal-title" style="margin:0;">Add New Product</h3>
                 <button onclick="closeModal('product-modal')" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
             </div>
-            <form id="product-form" onsubmit="saveProduct(event)">
+            <form onsubmit="saveProduct(event)">
                 <input type="hidden" id="prod-id">
                 <div style="margin-bottom:15px;">
                     <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">Product Name</label>

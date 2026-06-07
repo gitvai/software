@@ -1470,9 +1470,14 @@
                     body: JSON.stringify({ name, type, charge, code })
                 });
                 if (res.ok) {
+                    const newProduct = await res.json();
                     alert("Product added!");
                     closeQuickProductModal();
-                    loadProducts(); // Refresh the list
+                    await loadProducts(); // Refresh the list
+                    selectProduct(newProduct);
+                } else {
+                    const err = await res.json();
+                    alert(err.error || "Failed to add product");
                 }
             } catch (err) { console.error(err); }
         }
