@@ -134,7 +134,8 @@
         }
     </style>
     <script src="transitions.js"></script>
-    <!-- Cache buster 1780827700836 -->
+    
+    <!-- Cache buster 1780828418756 -->
 </head>
 <body>
     <header>
@@ -821,7 +822,7 @@
             try {
                 const search = document.getElementById('stock-search').value;
                 const category = document.getElementById('stock-category').value;
-                const res = await fetch(`${API_BASE}/materials?search=${search}&category=${category}`);
+                const res = await fetch(`${API_BASE}/materials?search=${search}&category=${category}` + ( `materials?search=${search}&category=${category}`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 let materials = await res.json();
                 
                 if (currentStockFilter === 'Low') materials = materials.filter(m => (m.stock || 0) <= (m.reorderLevel || 10));
@@ -876,7 +877,7 @@
 
         async function viewMaterialDetails(id) {
             try {
-                const resMat = await fetch(`${API_BASE}/materials`);
+                const resMat = await fetch(`${API_BASE}/materials` + ( `materials`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const materials = await resMat.json();
                 const mat = materials.find(m => m.id === id);
                 if (!mat) {
@@ -920,7 +921,7 @@
                 const endDate = endVal ? new Date(endVal) : null;
                 if (endDate) endDate.setHours(23,59,59,999);
 
-                const res = await fetch(`${API_BASE}/inventory/transactions`);
+                const res = await fetch(`${API_BASE}/inventory/transactions` + ( `inventory/transactions`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const allTransactions = await res.json();
                 
                 const matTransactions = allTransactions
@@ -1090,7 +1091,7 @@
                 if (search) url += `search=${encodeURIComponent(search)}&`;
                 if (type) url += `type=${encodeURIComponent(type)}`;
 
-                const res = await fetch(url);
+                const res = await fetch(url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now());
                 const products = await res.json();
                 
                 const tbody = document.getElementById('products-tbody');
@@ -1106,7 +1107,7 @@
                 `).join('');
 
                 // Also update the filter dropdown types dynamically
-                const allRes = await fetch(`${API_BASE}/products`);
+                const allRes = await fetch(`${API_BASE}/products` + ( `products`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const allProducts = await allRes.json();
                 const filterSelect = document.getElementById('prod-filter-type');
                 const currentValue = filterSelect.value;
@@ -1124,9 +1125,9 @@
             } catch (err) { console.error(err); }
         }
 
-        async function editProduct(id) {
+        async function editProduct(id) { alert('Opening Edit Product Form!');
             try {
-                const res = await fetch(`${API_BASE}/products/${id}`);
+                const res = await fetch(`${API_BASE}/products/${id}` + ( `products/${id}`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const p = await res.json();
                 document.getElementById('prod-id').value = p.id;
                 document.getElementById('prod-name').value = p.name;
@@ -1184,7 +1185,7 @@
 
         async function fetchExpenses() {
             try {
-                const res = await fetch(`${API_BASE}/expenses`);
+                const res = await fetch(`${API_BASE}/expenses` + ( `expenses`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const expenses = await res.json();
                 const list = document.getElementById('expense-list');
                 if (expenses.length === 0) {
@@ -1210,7 +1211,7 @@
 
         async function loadStaffOptions() {
             try {
-                const res = await fetch(`${API_BASE}/staff`);
+                const res = await fetch(`${API_BASE}/staff` + ( `staff`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const staff = await res.json();
                 const select = document.getElementById('exp-paid-to');
                 select.innerHTML = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -1219,7 +1220,7 @@
 
         async function fetchTransactions(type) {
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions?type=${type}`);
+                const res = await fetch(`${API_BASE}/inventory/transactions?type=${type}` + ( `inventory/transactions?type=${type}`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const transactions = await res.json();
                 renderTransactions(type, transactions);
             } catch (err) {
@@ -1316,7 +1317,7 @@
             
             // Fetch next voucher number
             try {
-                const res = await fetch(`${API_BASE}/expenses/next-number`);
+                const res = await fetch(`${API_BASE}/expenses/next-number` + ( `expenses/next-number`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const data = await res.json();
                 document.getElementById('inline-exp-voucher').value = data.nextNumber;
             } catch(e) {
@@ -1325,7 +1326,7 @@
             
             // Populate Paid To staff options
             try {
-                const res = await fetch(`${API_BASE}/staff`);
+                const res = await fetch(`${API_BASE}/staff` + ( `staff`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const staff = await res.json();
                 const select = document.getElementById('inline-exp-paid-to');
                 select.innerHTML = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -1383,7 +1384,7 @@
             
             // Fetch next inward document number
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Inward`);
+                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Inward` + ( `inventory/transactions/next-number?type=Inward`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const data = await res.json();
                 document.getElementById('inward-doc-no').value = data.nextNumber;
             } catch(e) {
@@ -1404,7 +1405,7 @@
 
         async function loadSuppliersDropdowns() {
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions?type=Inward`);
+                const res = await fetch(`${API_BASE}/inventory/transactions?type=Inward` + ( `inventory/transactions?type=Inward`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const transactions = await res.json();
                 const uniqueSuppliers = [...new Set(transactions.map(t => t.supplier).filter(s => s))];
                 
@@ -1432,7 +1433,7 @@
 
         async function fetchSideMaterials(type) {
             try {
-                const res = await fetch(`${API_BASE}/materials?category=All`);
+                const res = await fetch(`${API_BASE}/materials?category=All` + ( `materials?category=All`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 allMaterials = await res.json();
                 if (type === 'Inward') {
                     filterInwardMaterials();
@@ -1635,7 +1636,7 @@
             
             // Fetch next outward document number
             try {
-                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Outward`);
+                const res = await fetch(`${API_BASE}/inventory/transactions/next-number?type=Outward` + ( `inventory/transactions/next-number?type=Outward`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const data = await res.json();
                 document.getElementById('outward-doc-no').value = data.nextNumber;
             } catch(e) {
@@ -1644,7 +1645,7 @@
             
             // Load recipients dropdown
             try {
-                const res = await fetch(`${API_BASE}/staff`);
+                const res = await fetch(`${API_BASE}/staff` + ( `staff`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const staff = await res.json();
                 const select = document.getElementById('outward-doc-recipient');
                 select.innerHTML = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -1877,7 +1878,7 @@
         async function openOutwardModal() { 
             showInlineNewOutward();
         }
-        function openProductModal() { 
+        function openProductModal() { alert('Opening Add Product Form!'); 
             document.getElementById('prod-id').value = '';
             document.getElementById('prod-name').value = '';
             document.getElementById('prod-type').value = 'General';
@@ -1891,7 +1892,7 @@
 
         async function populateMaterialsDropdown() {
             try {
-                const res = await fetch(`${API_BASE}/materials?category=All`);
+                const res = await fetch(`${API_BASE}/materials?category=All` + ( `materials?category=All`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const materials = await res.json();
                 const sel = document.getElementById('inv-material');
                 if (sel) sel.innerHTML = '<option value="">- Select Material -</option>' + 

@@ -254,6 +254,7 @@
         }
     </style>
     <script src="transitions.js"></script>
+    <!-- Cache buster 1780828418763 -->
 </head>
 
 <body>
@@ -768,7 +769,7 @@
 
         async function loadClients() {
             try {
-                const res = await fetch(`${API_BASE}/clients`);
+                const res = await fetch(`${API_BASE}/clients` + ( `clients`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 allClients = await res.json();
                 renderClients(allClients);
                 populateDoctors();
@@ -813,7 +814,7 @@
         async function loadOrderData(id) {
             currentOrderId = id;
             try {
-                const res = await fetch(`${API_BASE}/orders/${id}`);
+                const res = await fetch(`${API_BASE}/orders/${id}` + ( `orders/${id}`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const order = await res.json();
 
                 // Populate client and step
@@ -920,7 +921,7 @@
         async function loadProducts() {
             try {
                 // Load Product Types for dropdown
-                const typesRes = await fetch(`${API_BASE}/product-types`);
+                const typesRes = await fetch(`${API_BASE}/product-types` + ( `product-types`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 let types = [];
                 if (typesRes.ok) {
                     types = await typesRes.json();
@@ -968,7 +969,7 @@
 
             let products = [];
             try {
-                const res = await fetch(url);
+                const res = await fetch(url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now());
                 if (!res.ok) throw new Error('API Error');
                 products = await res.json();
             } catch (err) {
@@ -1251,7 +1252,7 @@
 
         async function loadStaff() {
             try {
-                const res = await fetch(`${API_BASE}/staff`);
+                const res = await fetch(`${API_BASE}/staff` + ( `staff`.includes('?') ? '&' : '?' ) + '_t=' + Date.now());
                 const staff = await res.json();
                 const select = document.getElementById('assign-to');
                 if (select) {
