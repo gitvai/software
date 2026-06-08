@@ -83,10 +83,19 @@
                     <div style="display: flex; gap: 15px; align-items: center; background: #f9fafb; padding: 10px; border: 1px solid #ddd;">
                         <div style="font-size:12px;">
                             <label>Shipment Date</label>
-                            <select style="padding:4px; margin-left:10px;"><option>Month To Date</option></select>
+                            <select id="filter-date-range" style="padding:4px; margin-left:10px;" onchange="updateDateRange(); loadData();">
+                                <option>Month To Date</option>
+                                <option>Today</option>
+                                <option>Yesterday</option>
+                                <option>Last 7 Days</option>
+                                <option>Last 30 Days</option>
+                                <option>This Month</option>
+                                <option>Last Month</option>
+                                <option>Custom Date</option>
+                            </select>
                         </div>
-                        <input type="date" value="2026-04-01" style="padding:4px; border:1px solid #ccc;">
-                        <input type="date" value="2026-04-25" style="padding:4px; border:1px solid #ccc;">
+                        <input type="date" id="filter-date-start" style="padding:4px; border:1px solid #ccc;" onchange="handleManualDateChange()">
+                        <input type="date" id="filter-date-end" style="padding:4px; border:1px solid #ccc;" onchange="handleManualDateChange()">
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
                         <span style="font-size:13px; font-weight:700; color: var(--accent-pink);">Client Search</span>
@@ -411,6 +420,69 @@
         const API_BASE = 'https://software-e857.onrender.com/api';
         let currentMode = 'notes';
 
+        function formatLocalDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function updateDateRange() {
+            const rangeType = document.getElementById('filter-date-range').value;
+            const startInput = document.getElementById('filter-date-start');
+            const endInput = document.getElementById('filter-date-end');
+            const today = new Date();
+
+            let startDate, endDate;
+
+            switch (rangeType) {
+                case 'Today':
+                    startDate = new Date(today);
+                    endDate = new Date(today);
+                    break;
+                case 'Yesterday':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 1);
+                    endDate = new Date(startDate);
+                    break;
+                case 'Last 7 Days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    endDate = new Date(today);
+                    break;
+                case 'Last 30 Days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 29);
+                    endDate = new Date(today);
+                    break;
+                case 'This Month':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'Last Month':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'Month To Date':
+                default:
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today);
+                    break;
+                case 'Custom Date':
+                    return;
+            }
+
+            if (startDate && endDate) {
+                startInput.value = formatLocalDate(startDate);
+                endInput.value = formatLocalDate(endDate);
+            }
+        }
+
+        function handleManualDateChange() {
+            document.getElementById('filter-date-range').value = 'Custom Date';
+            loadData();
+        }
+
         async function loadClients() {
             const res = await fetch(`${API_BASE}/clients`);
             const clients = await res.json();
@@ -443,7 +515,11 @@
             const clientSearch = document.getElementById('filter-client').value;
 
             try {
+                const start = document.getElementById('filter-date-start').value;
+                const end = document.getElementById('filter-date-end').value;
                 let url = `${API_BASE}/shipment-notes?`;
+                if (start) url += `dateFrom=${start}&`;
+                if (end) url += `dateTo=${end}&`;
                 if (search || clientSearch) {
                     const combined = [search, clientSearch].filter(Boolean).join(' ');
                     url += `search=${encodeURIComponent(combined)}&`;
@@ -471,7 +547,11 @@
             });
 
             try {
+                const start = document.getElementById('filter-date-start').value;
+                const end = document.getElementById('filter-date-end').value;
                 let url = `${API_BASE}/orders?shippingStatus=Pending`;
+                if (start) url += `&dateFrom=${start}`;
+                if (end) url += `&dateTo=${end}`;
                 const search = document.getElementById('shipment-search-input').value;
                 const clientSearch = document.getElementById('filter-client').value;
                 if (search || clientSearch) {
@@ -1047,7 +1127,12 @@
             });
 
             try {
-                const res = await fetch(`${API_BASE}/pickup-returns`);
+                const start = document.getElementById('filter-date-start').value;
+                const end = document.getElementById('filter-date-end').value;
+                let url = `${API_BASE}/pickup-returns?`;
+                if (start) url += `dateFrom=${start}&`;
+                if (end) url += `dateTo=${end}&`;
+                const res = await fetch(url);
                 const items = await res.json();
                 const tbody = document.querySelector('#shipments-table tbody');
                 tbody.innerHTML = '';
@@ -1130,7 +1215,12 @@
             });
 
             try {
-                const res = await fetch(`${API_BASE}/delivery-plans`);
+                const start = document.getElementById('filter-date-start').value;
+                const end = document.getElementById('filter-date-end').value;
+                let url = `${API_BASE}/delivery-plans?`;
+                if (start) url += `dateFrom=${start}&`;
+                if (end) url += `dateTo=${end}&`;
+                const res = await fetch(url);
                 const plans = await res.json();
                 const tbody = document.querySelector('#shipments-table tbody');
                 tbody.innerHTML = '';
@@ -1301,6 +1391,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            updateDateRange();
             await loadClients();
             
             const urlParams = new URLSearchParams(window.location.search);

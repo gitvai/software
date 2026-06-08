@@ -1114,7 +1114,19 @@ app.get('/api/day-book', async (req, res) => {
 // --- PICKUP RETURNS (TryIn History) ---
 app.get('/api/pickup-returns', async (req, res) => {
   try {
+    const { dateFrom, dateTo } = req.query;
+    const where = {};
+    if (dateFrom || dateTo) {
+      where.pickupDate = {};
+      if (dateFrom) where.pickupDate.gte = toDate(dateFrom) || new Date(dateFrom);
+      if (dateTo) {
+        let toDateVal = toDate(dateTo) || new Date(dateTo);
+        toDateVal.setHours(23, 59, 59, 999);
+        where.pickupDate.lte = toDateVal;
+      }
+    }
     const returns = await prisma.pickupReturn.findMany({
+      where,
       include: { order: { include: { client: true } } },
       orderBy: { createdAt: 'desc' }
     });
@@ -1136,9 +1148,18 @@ app.post('/api/pickup-returns', async (req, res) => {
 // --- SHIPMENT NOTES ---
 app.get('/api/shipment-notes', async (req, res) => {
   try {
-    const { clientId, search } = req.query;
+    const { clientId, search, dateFrom, dateTo } = req.query;
     const where = {};
     if (clientId) where.clientId = Number(clientId);
+    if (dateFrom || dateTo) {
+      where.noteDate = {};
+      if (dateFrom) where.noteDate.gte = toDate(dateFrom) || new Date(dateFrom);
+      if (dateTo) {
+        let toDateVal = toDate(dateTo) || new Date(dateTo);
+        toDateVal.setHours(23, 59, 59, 999);
+        where.noteDate.lte = toDateVal;
+      }
+    }
     if (search) {
       where.OR = [
         { noteNumber: { contains: search } },
@@ -1231,7 +1252,19 @@ app.post('/api/shipment-notes', async (req, res) => {
 
 app.get('/api/delivery-plans', async (req, res) => {
   try {
+    const { dateFrom, dateTo } = req.query;
+    const where = {};
+    if (dateFrom || dateTo) {
+      where.planDate = {};
+      if (dateFrom) where.planDate.gte = toDate(dateFrom) || new Date(dateFrom);
+      if (dateTo) {
+        let toDateVal = toDate(dateTo) || new Date(dateTo);
+        toDateVal.setHours(23, 59, 59, 999);
+        where.planDate.lte = toDateVal;
+      }
+    }
     const plans = await prisma.deliveryPlan.findMany({
+      where,
       include: { driver: true, shipmentNotes: true }
     });
     res.json(plans);
