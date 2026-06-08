@@ -110,7 +110,6 @@
                     <button class="btn-toolbar" onclick="bulkAction('email')"><i class="fas fa-envelope"></i> Email</button>
                     <button class="btn-toolbar" onclick="bulkAction('return')"><i class="fas fa-undo"></i> Return Enclosures</button>
                     <button id="btn-generate-shipment" class="btn-toolbar" style="display:none; background: #3b82f6; color: #fff; border-color: #2563eb;" onclick="openConfirmShipmentModal()"><i class="fas fa-truck-loading"></i> Generate Shipment Notes</button>
-                    <button id="btn-generate-invoice" class="btn-toolbar" style="display:none; background: #10b981; color: #fff; border-color: #059669;" onclick="openConfirmInvoiceModal()"><i class="fas fa-file-invoice-dollar"></i> Generate Invoice</button>
                     <a href="#" style="margin-left:auto; font-size:13px; color:#3b82f6; text-decoration:none; font-weight:700;">Fields</a>
                 </div>
 
@@ -483,6 +482,21 @@
             loadData();
         }
 
+        function formatProductDisplay(type, name) {
+            const pType = (type || '').trim();
+            const pName = (name || '').trim();
+            if (pType && pName) {
+                if (pType.toLowerCase() === pName.toLowerCase()) {
+                    return pName;
+                } else if (pType.toLowerCase().includes(pName.toLowerCase()) || pName.toLowerCase().includes(pType.toLowerCase())) {
+                    return pType.length >= pName.length ? pType : pName;
+                } else {
+                    return `${pType} - ${pName}`;
+                }
+            }
+            return pType || pName || '';
+        }
+
         async function loadClients() {
             const res = await fetch(`${API_BASE}/clients`);
             const clients = await res.json();
@@ -509,7 +523,6 @@
             thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox"></th><th>#</th><th>Shipment #</th><th>Order #</th><th>Shipment Date</th><th>Client</th><th>Amount</th><th>Actions</th></tr>';
             
             document.getElementById('btn-generate-shipment').style.display = 'none';
-            document.getElementById('btn-generate-invoice').style.display = 'none';
             
             const search = document.getElementById('shipment-search-input').value;
             const clientSearch = document.getElementById('filter-client').value;
@@ -538,7 +551,6 @@
             thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox"></th><th>#</th><th>Order #</th><th>Order Date</th><th>Client</th><th>Patient</th><th>Products</th><th>Model #</th><th>Status</th><th>Due Date</th><th>Order Amount</th><th></th></tr>';
 
             document.getElementById('btn-generate-shipment').style.display = 'block';
-            document.getElementById('btn-generate-invoice').style.display = 'block';
 
             // Sidebar active state
             document.querySelectorAll('.sidebar-link').forEach(l => {
@@ -684,7 +696,7 @@
                         <td>${displayDate(item.receivedDate || item.date)}</td>
                         <td>${clientHtml}</td>
                         <td>${item.patientName || ''}</td>
-                        <td style="color:#6b7280;">${item.productType || ''} ${item.productName ? '- ' + item.productName : ''}</td>
+                        <td style="color:#6b7280;">${formatProductDisplay(item.productType, item.productName)}</td>
                         <td style="font-weight:bold;">${item.modelNumber || ''}</td>
                         <td style="font-weight:bold; color:${statusColor};">${item.status || ''}</td>
                         <td>${item.dueDate ? displayDate(item.dueDate) : 'N/A'}</td>
@@ -1177,7 +1189,7 @@
                         <td>${order.receivedDate ? displayDate(order.receivedDate) : 'N/A'}</td>
                         <td>${clientHtml}</td>
                         <td>${order.patientName || ''}</td>
-                        <td style="color:#6b7280;">${order.productType || ''} ${order.productName ? '- ' + order.productName : ''}</td>
+                        <td style="color:#6b7280;">${formatProductDisplay(order.productType, order.productName)}</td>
                         <td style="font-weight:bold;">${order.modelNumber || ''}</td>
                         <td style="font-weight:bold; color:${statusColor};">${order.status || ''}</td>
                         <td style="${dueDateStyle}">${order.dueDate ? displayDate(order.dueDate) : 'N/A'}</td>

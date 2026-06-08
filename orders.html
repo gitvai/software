@@ -1957,7 +1957,7 @@
                         theadHTML += `<th>${col.caption}</th>`;
                     });
                 } else {
-                    theadHTML += `<th>Order #</th><th>Order Date</th><th>Client</th><th>Patient</th><th>Products</th><th>Model #</th><th>Status</th><th>Due Date</th>`;
+                    theadHTML += `<th>Order #</th><th>Order Date</th><th>Client</th><th>Patient</th><th>Products</th><th>Model #</th><th>Status</th><th>Due Date</th><th>Invoice #</th><th>Amount</th>`;
                 }
 
                 theadHTML += extraHeaders;
@@ -3193,8 +3193,8 @@
             { name: 'Assign To', caption: 'Assign To', key: 'assignTo', defaultVisible: false },
             { name: 'Department', caption: 'Department', key: 'department', defaultVisible: false },
             { name: 'Delivery Method', caption: 'Delivery Method', key: 'deliveryMethod', defaultVisible: false },
-            { name: 'Invoice #', caption: 'Invoice #', key: 'invoiceNo', defaultVisible: false },
-            { name: 'Amount', caption: 'Amount', key: 'amount', defaultVisible: false }
+            { name: 'Invoice #', caption: 'Invoice #', key: 'invoiceNo', defaultVisible: true },
+            { name: 'Amount', caption: 'Amount', key: 'amount', defaultVisible: true }
         ];
 
         const DEFAULT_GRID_SETTINGS = {
@@ -3226,6 +3226,18 @@
             }
             if (!gridSettings || !gridSettings.columns || !gridSettings.options) {
                 gridSettings = JSON.parse(JSON.stringify(DEFAULT_GRID_SETTINGS));
+            } else {
+                // Ensure new default visible columns (like invoiceNo and amount) are present and visible if not already there
+                const defaultVisibleKeys = ['invoiceNo', 'amount'];
+                defaultVisibleKeys.forEach(key => {
+                    const exists = gridSettings.columns.some(c => c.key === key);
+                    if (!exists) {
+                        const colObj = ALL_COLUMNS.find(c => c.key === key);
+                        if (colObj) {
+                            gridSettings.columns.push({ name: colObj.name, caption: colObj.caption, key: colObj.key, visible: true });
+                        }
+                    }
+                });
             }
         }
 
