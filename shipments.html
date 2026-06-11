@@ -840,7 +840,7 @@
         }
 
         function sendPortalLink() {
-            const portalUrl = `http://localhost:5000/portal/${currentClientId}`;
+            const portalUrl = `https://software-e857.onrender.com/portal/${currentClientId}`;
             navigator.clipboard.writeText(portalUrl).then(() => {
                 alert("Portal link copied to clipboard!");
             });
