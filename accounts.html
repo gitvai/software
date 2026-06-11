@@ -105,7 +105,8 @@
                 <button class="btn-toolbar"><i class="fas fa-print"></i> Print</button>
                 <button class="btn-toolbar"><i class="fas fa-envelope"></i> Email</button>
                 <button id="btn-bulk-generate-invoice" class="btn-toolbar" style="display:none; background: #10b981; color: #fff; border-color: #059669;" onclick="openConfirmInvoiceModal()"><i class="fas fa-file-invoice-dollar"></i> Generate Invoice</button>
-                <a href="javascript:void(0)" style="margin-left:auto; font-size:13px; color:#3b82f6; text-decoration:none; font-weight:700;">Fields</a>
+                <button id="btn-new-adjustment" class="btn-toolbar" style="display:none; background: #ec4899; color: #fff; border-color: #db2777;" onclick="openNewAdjustmentModal()"><i class="fas fa-plus"></i> New Adjustment</button>
+                <a href="javascript:void(0)" style="margin-left:auto; font-size:13px; color:#3b82f6; text-decoration:none; font-weight:700;" onclick="openFieldsModal(event)">Fields</a>
             </div>
 
             <!-- Table -->
@@ -162,8 +163,95 @@
     </style>
 
     <script>
-        const API_BASE = 'https://software-e857.onrender.com/api';
+
+        const API_BASE = '/api';
         let currentMode = 'invoices';
+        let currentAdjustmentType = 'Credit';
+        let currentEditingReceiptId = null;
+
+        function formatDateToDDMMYY(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const yy = String(date.getFullYear()).slice(-2);
+            return `${dd}/${mm}/${yy}`;
+        }
+
+        function parseDDMMYYToDate(str) {
+            if (!str) return null;
+            const parts = str.split('/');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                let year = parseInt(parts[2], 10);
+                if (year < 100) {
+                    year += 2000;
+                }
+                return new Date(year, month, day);
+            }
+            return new Date(str);
+        }
+
+        const ALL_COLUMNS_ACCOUNTS = {
+            invoices: [
+                { key: 'invoiceNo', name: 'Invoice #', caption: 'Invoice #' },
+                { key: 'orderIds', name: 'Order #', caption: 'Order #' },
+                { key: 'invoiceDate', name: 'Invoice Date', caption: 'Invoice Date' },
+                { key: 'client', name: 'Client', caption: 'Client' },
+                { key: 'amount', name: 'Amount', caption: 'Amount' },
+                { key: 'dueDate', name: 'Due Date', caption: 'Due Date' },
+                { key: 'paid', name: 'Paid', caption: 'Paid' },
+                { key: 'balance', name: 'Balance', caption: 'Balance' }
+            ],
+            generate: [
+                { key: 'orderNumber', name: 'Order #', caption: 'Order #' },
+                { key: 'orderDate', name: 'Order Date', caption: 'Order Date' },
+                { key: 'client', name: 'Client', caption: 'Client' },
+                { key: 'patient', name: 'Patient', caption: 'Patient' },
+                { key: 'products', name: 'Product', caption: 'Product' },
+                { key: 'modelNumber', name: 'Model #', caption: 'Model #' },
+                { key: 'status', name: 'Status', caption: 'Status' }
+            ],
+            payments: [
+                { key: 'receiptNo', name: 'Receipt #', caption: 'Receipt #' },
+                { key: 'date', name: 'Date', caption: 'Date' },
+                { key: 'client', name: 'Client', caption: 'Client' },
+                { key: 'amount', name: 'Amount', caption: 'Amount' },
+                { key: 'applied', name: 'Applied', caption: 'Applied' },
+                { key: 'balance', name: 'Balance', caption: 'Balance' }
+            ],
+            adjustments: [
+                { key: 'adjNo', name: 'Adj. #', caption: 'Adj. #' },
+                { key: 'date', name: 'Adj. Date', caption: 'Adj. Date' },
+                { key: 'client', name: 'Client', caption: 'Client' },
+                { key: 'amount', name: 'Amount', caption: 'Amount' },
+                { key: 'type', name: 'Adjustment Type', caption: 'Adjustment Type' },
+                { key: 'invoiceId', name: 'Applied To', caption: 'Applied To' }
+            ]
+        };
+
+        let gridSettingsAccounts = JSON.parse(localStorage.getItem('grid_display_settings_accounts')) || {
+            invoices: { columns: [...ALL_COLUMNS_ACCOUNTS.invoices.map(c => ({...c, visible: true}))], options: {} },
+            generate: { columns: [...ALL_COLUMNS_ACCOUNTS.generate.map(c => ({...c, visible: true}))], options: {} },
+            payments: { columns: [...ALL_COLUMNS_ACCOUNTS.payments.map(c => ({...c, visible: true}))], options: {} },
+            adjustments: { columns: [...ALL_COLUMNS_ACCOUNTS.adjustments.map(c => ({...c, visible: true}))], options: {} }
+        };
+        let draftSettings = null;
+
+        function applyDynamicHeaders() {
+            const cols = gridSettingsAccounts[currentMode].columns.filter(c => c.visible);
+            const thead = document.querySelector('#accounts-table thead');
+            if (!thead) return;
+            let ths = '<tr style="background:#f3f4f6;"><th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllCb" onclick="toggleSelectAll()"></th><th style="width: 40px;">#</th>';
+            cols.forEach(c => {
+                ths += `<th>${c.caption}</th>`;
+            });
+            ths += '<th style="width: 150px; text-align: center;">Actions</th></tr>';
+            thead.innerHTML = ths;
+        }
+
         let allClients = [];
 
         function toggleSelectAll(source) {
@@ -236,9 +324,9 @@
                     tr.innerHTML = `
                         <td><input type="checkbox" class="receipt-cb"></td>
                         <td>${index + 1}</td>
-                        <td style="font-weight: 600; color: #1e3a8a;">${item.receiptNumber}</td>
+                        <td style="font-weight: 600;"><a href="javascript:void(0)" style="color: #3b82f6; text-decoration: underline;" onclick="openEditModal('payment', ${item.id})">${item.receiptNumber}</a></td>
                         <td>${new Date(item.receiptDate).toLocaleDateString()}</td>
-                        <td style="font-weight: 500;">${item.client ? item.client.name : 'Unknown'}</td>
+                        <td style="font-weight: 500;"><a href="client_viewer.html?id=${item.clientId}" style="color: inherit; text-decoration: none;">${item.client ? item.client.name : 'Unknown'}</a></td>
                         <td style="font-weight: 700; color: #10b981;">₹${item.amount}</td>
                         <td style="color: #2563eb; font-weight: 600;">₹${item.appliedAmount || 0}</td>
                         <td style="font-weight: 700; color: #f59e0b;">₹${item.creditAmount || 0}</td>
@@ -249,16 +337,18 @@
                     `;
                 } else if (type === 'adjustment') {
                     tr.dataset.adjustmentId = item.id;
+                    const displayType = item.reason ? item.reason.split(':')[0] : item.type;
                     tr.innerHTML = `
                         <td><input type="checkbox" class="adjustment-cb"></td>
                         <td>${index + 1}</td>
-                        <td style="font-weight: 600; color: #1e3a8a;">${item.adjustmentNumber}</td>
+                        <td style="font-weight: 600; color: #1e3a8a;"><a href="javascript:void(0)" style="color: #3b82f6; text-decoration: underline;" onclick="openEditAdjustmentModal(${item.id})">${item.adjustmentNumber}</a></td>
                         <td>${new Date(item.date).toLocaleDateString()}</td>
-                        <td style="font-weight: 500;">${item.client ? item.client.name : 'Unknown'}</td>
-                        <td style="font-weight: 600; color: ${item.type === 'Credit' ? '#10b981' : '#ef4444'}">${item.type}</td>
+                        <td style="font-weight: 500;"><a href="client_viewer.html?id=${item.clientId}" style="color: inherit; text-decoration: none;">${item.client ? item.client.name : 'Unknown'}</a></td>
                         <td style="font-weight: 700;">₹${item.amount}</td>
-                        <td>${item.invoiceId ? `Invoice #${item.invoiceId}` : '-'}</td>
+                        <td style="font-weight: 600; color: ${item.type === 'Credit' ? '#10b981' : '#ef4444'}">${displayType}</td>
+                        <td>${item.invoice ? `<a href="javascript:void(0)" style="color: #3b82f6; text-decoration: underline;" onclick="openInvoiceDetailsModal(${item.invoiceId})">${item.invoice.invoiceNumber}</a>` : '-'}</td>
                         <td>
+                            <button class="btn-toolbar" style="color: #3b82f6;" onclick="openEditAdjustmentModal(${item.id})"><i class="fas fa-edit"></i> Edit</button>
                             <button class="btn-toolbar" style="color: #ef4444;" onclick="deleteAdjustment(${item.id})"><i class="fas fa-trash-alt"></i> Delete</button>
                         </td>
                     `;
@@ -272,15 +362,32 @@
             try {
                 const res = await fetch(`${API_BASE}/receipts/${id}`, { method: 'DELETE' });
                 if (res.ok) {
+                    closeEditModal();
                     loadData();
                 } else {
                     alert("Failed to cancel payment.");
                 }
             } catch(e) { console.error(e); }
         }
-
-        function deleteAdjustment(id) {
-            alert("Deletion of adjustments is not supported.");
+        async function deleteAdjustment(id) {
+            if (!confirm("Are you sure you want to delete this adjustment?")) return;
+            try {
+                const res = await fetch(`${API_BASE}/adjustments/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert("Adjustment deleted successfully!");
+                    const modal = document.getElementById('invoice-details-modal');
+                    if (modal) {
+                        modal.remove();
+                    }
+                    loadData();
+                } else {
+                    const err = await res.json();
+                    alert("Failed to delete adjustment: " + (err.error || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error deleting adjustment.");
+            }
         }
 
 
@@ -289,6 +396,7 @@
             document.getElementById('page-title').textContent = title;
             document.getElementById('btn-new-payment').style.display = 'none';
             document.getElementById('btn-bulk-generate-invoice').style.display = 'none';
+            if (document.getElementById('btn-new-adjustment')) document.getElementById('btn-new-adjustment').style.display = 'none';
             updateHeaders('invoices');
             
             try {
@@ -314,6 +422,8 @@
             currentMode = 'generate';
             document.getElementById('page-title').textContent = title;
             document.getElementById('btn-bulk-generate-invoice').style.display = 'block';
+            if (document.getElementById('btn-new-payment')) document.getElementById('btn-new-payment').style.display = 'none';
+            if (document.getElementById('btn-new-adjustment')) document.getElementById('btn-new-adjustment').style.display = 'none';
             updateHeaders('generate');
 
             try {
@@ -335,6 +445,8 @@
             currentMode = 'payments';
             document.getElementById('page-title').textContent = title;
             document.getElementById('btn-new-payment').style.display = 'block';
+            if (document.getElementById('btn-bulk-generate-invoice')) document.getElementById('btn-bulk-generate-invoice').style.display = 'none';
+            if (document.getElementById('btn-new-adjustment')) document.getElementById('btn-new-adjustment').style.display = 'none';
             updateHeaders('payments');
 
             try {
@@ -356,13 +468,53 @@
 
         async function loadAdjustments(type, title) {
             currentMode = 'adjustments';
+            currentAdjustmentType = type;
             document.getElementById('page-title').textContent = title;
             updateHeaders('adjustments');
+
+            if (document.getElementById('btn-new-payment')) document.getElementById('btn-new-payment').style.display = 'none';
+            if (document.getElementById('btn-bulk-generate-invoice')) document.getElementById('btn-bulk-generate-invoice').style.display = 'none';
+            
+            const btnNewAdj = document.getElementById('btn-new-adjustment');
+            if (btnNewAdj) {
+                btnNewAdj.style.display = 'block';
+                btnNewAdj.innerHTML = `<i class="fas fa-plus"></i> New ${type} Adjustment`;
+            }
 
             try {
                 const res = await fetch(`${API_BASE}/adjustments`);
                 let adjustments = await res.json();
                 if (type !== 'Journal') adjustments = adjustments.filter(a => a.type === type);
+                
+                // Client-side search and client filter for adjustments
+                const search = document.getElementById('invoice-search-input').value.trim().toLowerCase();
+                const clientSearch = document.getElementById('filter-client').value.trim().toLowerCase();
+                
+                if (search || clientSearch) {
+                    adjustments = adjustments.filter(a => {
+                        const clientName = a.client ? a.client.name.toLowerCase() : '';
+                        const clientCode = a.client ? (a.client.code || '').toLowerCase() : '';
+                        const adjNo = (a.adjustmentNumber || '').toLowerCase();
+                        const invNo = (a.invoice && a.invoice.invoiceNumber || '').toLowerCase();
+                        
+                        let matchSearch = true;
+                        if (search) {
+                            matchSearch = clientName.includes(search) || 
+                                          clientCode.includes(search) || 
+                                          adjNo.includes(search) || 
+                                          invNo.includes(search);
+                        }
+                        
+                        let matchClient = true;
+                        if (clientSearch) {
+                            matchClient = clientName.includes(clientSearch) || 
+                                          clientCode.includes(clientSearch);
+                        }
+                        
+                        return matchSearch && matchClient;
+                    });
+                }
+                
                 renderTable(adjustments, 'adjustment');
             } catch (err) { console.error(err); }
         }
@@ -387,7 +539,7 @@
             } else if (mode === 'payments') {
                 thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox" onclick="toggleSelectAll(this)"></th><th>#</th><th>Receipt #</th><th>Date</th><th>Client</th><th>Amount</th><th>Applied</th><th>Balance</th><th>Actions</th></tr>';
             } else if (mode === 'adjustments') {
-                thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox" onclick="toggleSelectAll(this)"></th><th>#</th><th>Adj #</th><th>Date</th><th>Client</th><th>Type</th><th>Amount</th><th>Invoice</th><th>Actions</th></tr>';
+                thead.innerHTML = '<tr style="background:#f3f4f6;"><th style="width:30px;"><input type="checkbox" onclick="toggleSelectAll(this)"></th><th>Sr</th><th>Adj. #</th><th>Adj. Date</th><th>Client</th><th>Amount</th><th>Adjustment Type</th><th>Applied To</th><th>Edit</th></tr>';
             }
         }
 
@@ -398,7 +550,11 @@
 
             if (id) {
                 if (type === 'invoice') { url = `${API_BASE}/invoices/${id}`; title = 'Edit Invoice'; }
-                if (type === 'payment') { url = `${API_BASE}/receipts/${id}`; title = 'Payment'; }
+                if (type === 'payment') { 
+                    url = `${API_BASE}/receipts/${id}`; 
+                    title = 'Payment';
+                    currentEditingReceiptId = id;
+                }
 
                 try {
                     const res = await fetch(url);
@@ -406,6 +562,7 @@
                 } catch (err) { console.error(err); }
             } else {
                 title = 'New Payment';
+                currentEditingReceiptId = null;
                 data = {
                     receiptNumber: 'RCP-' + Date.now().toString().slice(-6),
                     receiptDate: new Date().toISOString(),
@@ -425,31 +582,43 @@
             let footerHtml = '';
 
             if (type === 'payment') {
-                contentHtml = `
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; font-size:11px; color:#666;">Client (Search & Select)</label>
-                        <input type="text" id="edit-client-search" list="client-list" value="${data.client ? data.client.name : ''}" placeholder="Type to search client..." style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;" onchange="handleClientSearchChange(this.value)">
+                const clientSection = id ? `
+                    <div style="margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                        <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Client</label>
+                        <div style="font-weight:700; color:#1f2937; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                            ${data.client ? data.client.name : 'Unknown'}
+                            <i class="fas fa-info-circle" style="color:#3b82f6; cursor:pointer; font-size:14px;"></i>
+                        </div>
+                    </div>
+                ` : `
+                    <div style="margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                        <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Client (Search & Select)</label>
+                        <input type="text" id="edit-client-search" list="client-list" value="${data.client ? data.client.name : ''}" placeholder="Type to search client..." style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px;" onchange="handleClientSearchChange(this.value)">
                         <datalist id="client-list">${clientOptions}</datalist>
                         <input type="hidden" id="edit-client" value="${data.clientId || ''}">
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                `;
+
+                contentHtml = `
+                    ${clientSection}
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:15px; font-family: 'Inter', sans-serif;">
                         <div>
-                            <label style="display:block; font-size:11px; color:#666;">Amount</label>
-                            <input type="number" id="edit-amount" value="${data.amount}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px; font-weight:700; color:#10b981;">
+                            <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Amount</label>
+                            <input type="number" id="edit-amount" value="${data.amount}" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box; ${id ? 'background-color:#f3f4f6; color:#1f2937; cursor:not-allowed;' : ''}" ${id ? 'readonly' : ''}>
                         </div>
                         <div>
-                            <label style="display:block; font-size:11px; color:#666;">Payment Date</label>
-                            <input type="date" id="edit-date" value="${new Date(data.receiptDate).toISOString().split('T')[0]}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                            <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Payment Date</label>
+                            <input type="text" id="edit-date" value="${formatDateToDDMMYY(data.receiptDate)}" placeholder="DD/MM/YY" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box;">
                         </div>
                         <div>
-                            <label style="display:block; font-size:11px; color:#666;">Receipt #</label>
-                            <input type="text" id="edit-ref" value="${data.receiptNumber}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                            <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Receipt #</label>
+                            <input type="text" id="edit-ref" value="${data.receiptNumber}" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box; ${id ? 'background-color:#f3f4f6; color:#1f2937; cursor:not-allowed;' : ''}" ${id ? 'readonly' : ''}>
                         </div>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px; margin-bottom:15px;">
+                    <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px; margin-bottom:15px; font-family: 'Inter', sans-serif;">
                         <div>
-                            <label style="display:block; font-size:11px; color:#666;">Payment Mode</label>
-                            <select id="edit-mode" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                            <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Payment Mode</label>
+                            <select id="edit-mode" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; background: #fff;">
                                 <option ${data.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
                                 <option ${data.paymentMode === 'Cheque' ? 'selected' : ''}>Cheque</option>
                                 <option ${data.paymentMode === 'UPI' ? 'selected' : ''}>UPI</option>
@@ -457,44 +626,80 @@
                             </select>
                         </div>
                         <div>
-                            <label style="display:block; font-size:11px; color:#666;">Cheque/Ref #</label>
-                            <input type="text" id="edit-cheque" value="${data.chequeNumber || ''}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                            <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Cheque/Ref #</label>
+                            <input type="text" id="edit-cheque" value="${data.chequeNumber || ''}" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box;">
                         </div>
                     </div>
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; font-size:11px; color:#666;">Notes</label>
-                        <input type="text" id="edit-notes" value="${data.notes || ''}" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                    <div style="margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                        <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Notes</label>
+                        <input type="text" id="edit-notes" value="${data.notes || ''}" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div onclick="toggleReceiptInvoicesDropdown(this)" style="border: 1px solid #111827; padding: 8px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer;">
+                        <div style="display: flex; gap: 40px;">
+                            <span>Total Applied : ${data.appliedAmount || 0}</span>
+                            <span>Balance : ${data.creditAmount || 0}</span>
+                        </div>
+                        <div>
+                            <i id="receipt-invoices-chevron" class="fas fa-chevron-down" style="font-size: 12px; color: #111827; transition: transform 0.2s;"></i>
+                        </div>
+                    </div>
+                    <div id="receipt-invoices-dropdown" style="display: none; margin-bottom: 20px; border: 1px solid #ddd; max-height: 200px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; text-align: left; border: 1px solid #ddd;">
+                            <thead>
+                                <tr style="background: #f8f9fa;">
+                                    <th style="padding: 8px; border: 1px solid #ddd; font-weight: 600;">Sr</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; font-weight: 600;">Invoice #</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; font-weight: 600;">Invoice Date</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; font-weight: 600;">Invoice Amount</th>
+                                    <th style="padding: 8px; border: 1px solid #ddd; font-weight: 600;">Adjusted</th>
+                                </tr>
+                            </thead>
+                            <tbody id="receipt-invoices-dropdown-body">
+                                <tr>
+                                    <td colspan="5" style="padding: 12px; text-align: center; color: #666;">Loading invoices...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 `;
                 footerHtml = `
-                    <div style="display:flex; gap:10px; width:100%; justify-content: flex-end;">
-                        <button onclick="saveEditData('${type}', ${id})" style="padding:8px 25px; border:none; background:#10b981; color:#fff; border-radius:4px; cursor:pointer; font-weight:600;">Save Payment</button>
-                        <button onclick="closeEditModal()" style="padding:8px 20px; border:1px solid #ccc; color:#666; background:#fff; border-radius:4px; cursor:pointer;">Cancel</button>
+                    <div style="display:flex; width:100%; align-items:center; justify-content:space-between; font-family: 'Inter', sans-serif;">
+                        ${id ? `
+                        <button onclick="deleteReceipt(${id})" style="padding:8px 15px; border:1px solid #ef4444; color:#ef4444; background:#fff; border-radius:4px; cursor:pointer; display:flex; align-items:center; gap:5px; font-weight:500;">
+                            <i class="far fa-trash-alt"></i> Cancel Payment
+                        </button>
+                        ` : '<div></div>'}
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="saveEditData('${type}', ${id})" style="padding:8px 25px; border:1px solid #ccc; background:#fff; color:#0066cc; border-radius:4px; cursor:pointer; font-weight:600;">Save Receipt</button>
+                            <button onclick="closeEditModal()" style="padding:8px 20px; border:1px solid #ccc; color:#666; background:#fff; border-radius:4px; cursor:pointer;">Cancel</button>
+                        </div>
                     </div>
                 `;
             } else {
                 contentHtml = `
-                    <div style="margin:20px 0;">
+                    <div style="margin:20px 0; font-family: 'Inter', sans-serif;">
                         <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Reference #</label>
-                        <input type="text" id="edit-ref" value="${data.invoiceNumber || data.receiptNumber}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:15px;">
+                        <input type="text" id="edit-ref" value="${data.invoiceNumber || data.receiptNumber}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; font-family: inherit; font-size: 14px;">
                         <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Date</label>
-                        <input type="date" id="edit-date" value="${new Date(data.invoiceDate || data.receiptDate).toISOString().split('T')[0]}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:15px;">
+                        <input type="date" id="edit-date" value="${new Date(data.invoiceDate || data.receiptDate).toISOString().split('T')[0]}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; font-family: inherit; font-size: 14px;">
                         <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Amount</label>
-                        <input type="number" id="edit-amount" value="${data.netAmount || data.amount}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        <input type="number" id="edit-amount" value="${data.netAmount || data.amount}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-family: inherit; font-size: 14px;">
                     </div>
                 `;
                 footerHtml = `
-                    <button onclick="closeEditModal()" style="padding:8px 16px; border:1px solid #ddd; background:none; border-radius:4px; cursor:pointer;">Cancel</button>
-                    <button onclick="saveEditData('${type}', ${id})" style="padding:8px 16px; border:none; background:#ec4899; color:#fff; border-radius:4px; cursor:pointer; font-weight:600;">Save Changes</button>
+                    <div style="display:flex; width:100%; justify-content:flex-end; gap:10px; font-family: 'Inter', sans-serif;">
+                        <button onclick="closeEditModal()" style="padding:8px 16px; border:1px solid #ddd; background:none; border-radius:4px; cursor:pointer;">Cancel</button>
+                        <button onclick="saveEditData('${type}', ${id})" style="padding:8px 16px; border:none; background:#ec4899; color:#fff; border-radius:4px; cursor:pointer; font-weight:600;">Save Changes</button>
+                    </div>
                 `;
             }
 
             const modalHtml = `
-                <div id="edit-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000;">
+                <div id="edit-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000; font-family: 'Inter', sans-serif;">
                     <div style="background:#fff; width:${type === 'payment' ? '500px' : '400px'}; padding:20px; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-                        <h3 style="margin:0 0 15px 0; font-size:16px; border-bottom:1px solid #eee; padding-bottom:10px;">${title}</h3>
+                        <h3 style="margin:0 0 20px 0; font-size:20px; font-weight:600; color:#111827; ${type === 'payment' ? 'border-bottom:none; padding-bottom:0;' : 'border-bottom:1px solid #eee; padding-bottom:10px;'}">${title}</h3>
                         <div>${contentHtml}</div>
-                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">${footerHtml}</div>
+                        <div style="display:flex; width:100%; margin-top:20px;">${footerHtml}</div>
                     </div>
                 </div>
             `;
@@ -512,7 +717,6 @@
 
         async function saveEditData(type, id) {
             const ref = document.getElementById('edit-ref').value.trim();
-            const date = document.getElementById('edit-date').value;
             const amount = parseFloat(document.getElementById('edit-amount').value) || 0;
             
             if (!ref) {
@@ -527,9 +731,18 @@
             let url = '';
             let body = {};
             if (type === 'invoice') {
+                const date = document.getElementById('edit-date').value;
                 url = id ? `${API_BASE}/invoices/${id}` : `${API_BASE}/invoices`;
                 body = { invoiceNumber: ref, invoiceDate: date, netAmount: amount };
             } else if (type === 'payment') {
+                const dateText = document.getElementById('edit-date').value;
+                const parsedDate = parseDDMMYYToDate(dateText);
+                if (!parsedDate || isNaN(parsedDate.getTime())) {
+                    alert("Please enter a valid date in DD/MM/YY format.");
+                    return;
+                }
+                const receiptDate = parsedDate.toISOString();
+
                 let clientId = document.getElementById('edit-client').value;
                 const clientSearchName = document.getElementById('edit-client-search').value;
                 if (!clientId && clientSearchName) {
@@ -547,7 +760,7 @@
                 url = id ? `${API_BASE}/receipts/${id}` : `${API_BASE}/receipts`;
                 body = { 
                     receiptNumber: ref, 
-                    receiptDate: date, 
+                    receiptDate: receiptDate, 
                     amount: amount,
                     clientId: parseInt(clientId),
                     paymentMode: document.getElementById('edit-mode').value,
@@ -587,11 +800,21 @@
             if (currentMode === 'invoices') loadInvoices('all', 'Search Invoices');
             else if (currentMode === 'order') loadGenerateInvoices('generate', 'Generate Invoices');
             else if (currentMode === 'payments') loadReceipts('payments', 'Payments');
-            else if (currentMode === 'adjustments') loadAdjustments('Journal', 'Journal Voucher');
+            else if (currentMode === 'adjustments') {
+                if (currentAdjustmentType === 'Credit') loadAdjustments('Credit', 'Credit Adjustments');
+                else if (currentAdjustmentType === 'Debit') loadAdjustments('Debit', 'Debit Adjustments');
+                else loadAdjustments('Journal', 'Journal Voucher');
+            }
         }
 
-        function loadPriceLists() { alert('Price Lists module coming soon'); }
-        function loadWarranties() { alert('Warranties module coming soon'); }
+        function loadPriceLists() { 
+            document.getElementById('page-title').textContent = 'Price Lists';
+            document.getElementById('accounts-table').querySelector('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center; padding:50px; color:#666;">Price Lists module is under development.</td></tr>';
+        }
+        function loadWarranties() { 
+            document.getElementById('page-title').textContent = 'Warranties';
+            document.getElementById('accounts-table').querySelector('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center; padding:50px; color:#666;">Warranties module is under development.</td></tr>';
+        }
 
         async function loadStaff() {
             try {
@@ -623,8 +846,8 @@
                 });
             });
         });
-        function handleClientSearchChange(name, clients) {
-            const client = clients.find(c => c.name === name);
+        function handleClientSearchChange(name) {
+            const client = allClients.find(c => c.name === name);
             if (client) {
                 document.getElementById('edit-client').value = client.id;
             } else {
@@ -821,7 +1044,751 @@
                 alert("An error occurred while saving: " + err.message);
             }
         }
-    </script>
+
+        window.toggleReceiptInvoicesDropdown = async function(el) {
+            const dropdown = document.getElementById('receipt-invoices-dropdown');
+            const chevron = document.getElementById('receipt-invoices-chevron');
+            if (!dropdown || !chevron) return;
+
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                chevron.style.transform = 'rotate(180deg)';
+                
+                if (dropdown.dataset.loaded !== 'true') {
+                    await loadReceiptInvoices();
+                    dropdown.dataset.loaded = 'true';
+                }
+            } else {
+                dropdown.style.display = 'none';
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        };
+
+        async function loadReceiptInvoices() {
+            const tbody = document.getElementById('receipt-invoices-dropdown-body');
+            if (!tbody) return;
+
+            const editClientVal = document.getElementById('edit-client');
+            const clientId = editClientVal ? parseInt(editClientVal.value) : null;
+            if (!clientId || !currentEditingReceiptId) {
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 12px; text-align: center; color: #666;">No invoices applied.</td></tr>';
+                return;
+            }
+
+            try {
+                // Fetch invoices for client
+                const invoicesRes = await fetch(`${API_BASE}/invoices?clientId=${clientId}`);
+                const invoices = await invoicesRes.json();
+                invoices.sort((a, b) => new Date(a.invoiceDate) - new Date(b.invoiceDate) || a.id - b.id);
+
+                // Fetch receipts for client
+                const receiptsRes = await fetch(`${API_BASE}/receipts?clientId=${clientId}`);
+                let receipts = await receiptsRes.json();
+                receipts = receipts.filter(r => r.status !== 'Cancelled');
+                receipts.sort((a, b) => new Date(a.receiptDate) - new Date(b.receiptDate) || a.id - b.id);
+
+                // FIFO simulation
+                const invoiceBalances = invoices.map(inv => ({
+                    id: inv.id,
+                    invoiceNumber: inv.invoiceNumber,
+                    invoiceDate: inv.invoiceDate,
+                    netAmount: inv.netAmount,
+                    remaining: inv.netAmount
+                }));
+
+                const targetReceiptApplications = [];
+
+                for (const receipt of receipts) {
+                    let receiptRemaining = receipt.amount;
+                    
+                    for (const inv of invoiceBalances) {
+                        if (receiptRemaining <= 0) break;
+                        if (inv.remaining <= 0) continue;
+
+                        const allocated = Math.min(receiptRemaining, inv.remaining);
+                        receiptRemaining -= allocated;
+                        inv.remaining -= allocated;
+
+                        if (receipt.id === currentEditingReceiptId) {
+                            targetReceiptApplications.push({
+                                id: inv.id,
+                                invoiceNumber: inv.invoiceNumber,
+                                invoiceDate: inv.invoiceDate,
+                                netAmount: inv.netAmount,
+                                adjusted: allocated
+                            });
+                        }
+                    }
+                }
+
+                if (targetReceiptApplications.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding: 12px; text-align: center; color: #666;">No invoices applied.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = targetReceiptApplications.map((app, idx) => `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px; border: 1px solid #ddd;">${idx + 1}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: 600;"><a href="javascript:void(0)" style="color: #3b82f6; text-decoration: underline;" onclick="closeEditModal(); openInvoiceDetailsModal(${app.id});">${app.invoiceNumber}</a></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatDateToDDMMYY(app.invoiceDate)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: 500;">₹${app.netAmount}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: 600; color: #10b981;">₹${app.adjusted}</td>
+                    </tr>
+                `).join('');
+
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 12px; text-align: center; color: #ef4444;">Failed to load invoices.</td></tr>';
+            }
+        }
+
+        async function openInvoiceDetailsModal(id) {
+            try {
+                const res = await fetch(`${API_BASE}/invoices/${id}`);
+                const invoice = await res.json();
+                
+                const existing = document.getElementById('invoice-details-modal');
+                if (existing) existing.remove();
+
+                let ordersHtml = '';
+                if (invoice.orders && invoice.orders.length > 0) {
+                    invoice.orders.forEach((o, i) => {
+                        ordersHtml += `
+                            <tr>
+                                <td style="border:1px solid #ccc; padding:4px;">${i + 1}</td>
+                                <td style="border:1px solid #ccc; padding:4px;"><a href="javascript:void(0)" style="color:#3b82f6;" onclick="window.open('edit-order.html?id=${o.id}', '_blank')">${o.orderNumber || o.id}</a></td>
+                                <td style="border:1px solid #ccc; padding:4px;">${new Date(o.receivedDate).toLocaleDateString()}</td>
+                                <td style="border:1px solid #ccc; padding:4px;">${o.patientName || '-'}</td>
+                                <td style="border:1px solid #ccc; padding:4px;">${o.productName || 'TEMPORARY BRIDGE'}</td>
+                                <td style="border:1px solid #ccc; padding:4px;">${o.totalAmount || 0}</td>
+                                <td style="border:1px solid #ccc; padding:4px;">${o.modelNumber || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    ordersHtml = `<tr><td colspan="7" style="text-align:center; padding:10px;">No orders found</td></tr>`;
+                }
+
+                const modalHtml = `
+                <div id="invoice-details-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:15000;">
+                    <div style="background:#fff; border-radius:4px; box-shadow:0 2px 10px rgba(0,0,0,0.2); width:800px; max-width:95vw; max-height:90vh; overflow-y:auto; position:relative; padding:20px;">
+                        <h2 style="margin-top:0; font-size:24px; color:#333; font-weight:700; margin-bottom:20px;">Invoice</h2>
+                        
+                        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                            <div>
+                                <div style="font-size:14px; color:#666;">Client</div>
+                                <div style="font-size:16px; font-weight:700; color:#1e3a8a;"><a href="client_viewer.html?id=${invoice.clientId}" style="color: inherit; text-decoration: none;">${invoice.client ? invoice.client.name : 'Unknown'}</a> <i class="fas fa-info-circle" style="color:#3b82f6; cursor:pointer;"></i></div>
+                                
+                                <div style="display:flex; gap:20px; margin-top:15px; font-size:14px;">
+                                    <div>
+                                        <div style="color:#666;">Invoice #</div>
+                                        <div>${invoice.invoiceNumber}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color:#666;">Invoice Date</div>
+                                        <div>${new Date(invoice.invoiceDate).toLocaleDateString()}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color:#666;">Due Date</div>
+                                        <div>${invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '-'}</div>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex; gap:20px; margin-top:15px; font-size:14px;">
+                                    <div>
+                                        <div style="color:#666;">Order Total</div>
+                                        <div>${invoice.grossAmount || 0}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color:#666;">Tax</div>
+                                        <div>None</div>
+                                    </div>
+                                    <div>
+                                        <div style="color:#666;">Tax Amount</div>
+                                        <div>${invoice.taxAmount || 0}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color:#666;">Amount</div>
+                                        <div>${invoice.netAmount || 0}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="border:1px solid #ccc; padding:15px; border-radius:4px; text-align:center;">
+                                <div style="display:flex; gap:10px; justify-content:center; margin-bottom:10px;">
+                                    <button style="background:#fff; border:1px solid #ccc; padding:6px 12px; color:#3b82f6; cursor:pointer;" onclick="openEditModal('invoice', ${invoice.id})"><i class="fas fa-edit"></i> Edit</button>
+                                    <button style="background:#fff; border:1px solid #ccc; padding:6px 12px; color:#3b82f6; cursor:pointer;" onclick="downloadInvoicePDF(${invoice.id})"><i class="fas fa-print"></i> Print</button>
+                                </div>
+                                <button style="background:#fff; border:1px solid #ccc; padding:6px 12px; color:#6366f1; cursor:pointer; width:100%; margin-bottom:10px;" onclick="emailInvoice(${invoice.id})"><i class="fas fa-envelope"></i> Email</button>
+                                <button style="background:#fff; border:1px solid #ccc; padding:6px 12px; color:#25d366; cursor:pointer; width:100%; margin-bottom:10px;" onclick="whatsappInvoice(${invoice.id})"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                                <a href="javascript:void(0)" style="color:#3b82f6; font-size:13px; text-decoration:none;">View Sub Doctor wise split</a>
+                            </div>
+                        </div>
+
+                        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:10px;">
+                            <thead>
+                                <tr style="background:#e5e7eb;">
+                                    <th style="border:1px solid #ccc; padding:6px; text-align:left;">Sr</th>
+                                    <th style="border:1px solid #ccc; padding:6px; text-align:left;">Order #</th>
+                                    <th style="border:1px solid #ccc; padding:6px; text-align:left;">Order Date</th>
+                                    <th style="border:1px solid #ccc; padding:6px; text-align:left;">Patient</th>
+                                    <th style="border:1px solid #ccc; padding:6px; text-align:left;">Jobs</th>
+                                    <th style="border:1px solid #ccc; padding:6px; text-align:left;">Total Amount</th>
+                                    <th style="border:1px solid #ccc; padding:6px; text-align:left;">ModelNo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ordersHtml}
+                            </tbody>
+                        </table>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center; border:1px solid #ccc; padding:10px; margin-bottom:15px; font-size:14px;">
+                            <div>Total Applied : ${invoice.paidAmount || 0}</div>
+                            <div>Balance : ${invoice.balanceAmount || 0}</div>
+                            <button style="background:#e5e7eb; border:1px solid #ccc; padding:6px 12px; cursor:pointer;" onclick="toggleCreditAdjustmentForm(true, ${invoice.id})">Add Credit Adjustment</button>
+                        </div>
+                        
+                        <!-- Apply Credit Adjustment Form -->
+                        <div id="credit-adjustment-container" style="display:none; border:1px solid #ccc; padding:15px; margin-bottom:15px; background:#fff;">
+                            <h3 style="margin-top:0; font-size:15px; font-weight:700; color:#333; margin-bottom:15px;">Apply Credit/Debit Adjustment to Invoice</h3>
+                            
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-bottom:15px;">
+                                <div>
+                                    <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Amount</label>
+                                    <input type="number" id="adj-amount" value="0" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Adjustment Date</label>
+                                    <input type="date" id="adj-date" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Reference #</label>
+                                    <input type="text" id="adj-ref" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px; background:#f3f4f6;">
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom:15px; max-width: 300px;">
+                                <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Adjustment Type</label>
+                                <select id="adj-type" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                                    <option value="Credit" selected>Credit</option>
+                                    <option value="Debit">Debit</option>
+                                </select>
+                            </div>
+                            
+                            <div style="margin-bottom:15px;">
+                                <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Notes</label>
+                                <input type="text" id="adj-notes" placeholder="Enter notes..." style="width:100%; padding:6px; border:1px solid #ccc; border-radius:3px;">
+                            </div>
+                            
+                            <div style="border-top:1px dotted #ccc; padding-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+                                <button onclick="saveCreditAdjustment(${invoice.id}, ${invoice.clientId})" style="background:#f9f9f9; border:1px solid #ddd; color:#0066cc; padding:10px 20px; cursor:pointer; font-size:15px; border-radius:4px; font-weight: 500;">Save Adjustment</button>
+                                <button onclick="toggleCreditAdjustmentForm(false)" style="background:#f9f9f9; border:1px solid #ddd; color:#0066cc; padding:10px 20px; cursor:pointer; font-size:15px; border-radius:4px; font-weight: 500;">Cancel</button>
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <button style="background:#fff; border:1px solid #ec4899; color:#000; padding:8px 15px; cursor:pointer; font-size:16px;" onclick="deleteInvoice(${invoice.id})"><i class="fas fa-trash-alt"></i> Cancel Invoice</button>
+                            <button style="background:#f9fafb; border:1px solid #ccc; color:#3b82f6; padding:8px 20px; cursor:pointer; font-size:16px;" onclick="document.getElementById('invoice-details-modal').remove()">Close</button>
+                        </div>
+                    </div>
+                </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load invoice details");
+            }
+        }
+
+        async function deleteInvoice(id) {
+            if (!confirm("Are you sure you want to cancel this invoice?")) return;
+            try {
+                const res = await fetch(`${API_BASE}/invoices/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Invoice cancelled successfully');
+                    document.getElementById('invoice-details-modal').remove();
+                    loadData();
+                } else {
+                    alert('Failed to cancel invoice');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error cancelling invoice');
+            }
+        }
+
+        async function toggleCreditAdjustmentForm(show, invoiceId) {
+            const container = document.getElementById('credit-adjustment-container');
+            if (!container) return;
+            
+            if (show) {
+                container.style.display = 'block';
+                document.getElementById('adj-amount').value = 0;
+                document.getElementById('adj-notes').value = '';
+                document.getElementById('adj-type').value = 'Credit';
+                
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('adj-date').value = today;
+                
+                try {
+                    const res = await fetch(`${API_BASE}/adjustments`);
+                    if (res.ok) {
+                        const adjs = await res.json();
+                        const nextNum = (adjs.length + 1).toString().padStart(5, '0');
+                        document.getElementById('adj-ref').value = nextNum;
+                    } else {
+                        document.getElementById('adj-ref').value = Date.now().toString().slice(-5);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('adj-ref').value = Date.now().toString().slice(-5);
+                }
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        async function saveCreditAdjustment(invoiceId, clientId) {
+            const amount = parseFloat(document.getElementById('adj-amount').value) || 0;
+            const date = document.getElementById('adj-date').value;
+            const ref = document.getElementById('adj-ref').value.trim();
+            const type = document.getElementById('adj-type').value;
+            const notes = document.getElementById('adj-notes').value.trim();
+            
+            if (amount <= 0) {
+                alert("Please enter a valid amount greater than 0.");
+                return;
+            }
+            if (!date) {
+                alert("Please select a date.");
+                return;
+            }
+            if (!ref) {
+                alert("Please enter a reference number.");
+                return;
+            }
+            
+            const adjustmentData = {
+                adjustmentNumber: ref,
+                clientId: parseInt(clientId),
+                invoiceId: parseInt(invoiceId),
+                amount: amount,
+                date: date,
+                type: type,
+                reason: notes
+            };
+            
+            try {
+                const invRes = await fetch(`${API_BASE}/invoices/${invoiceId}`);
+                if (!invRes.ok) {
+                    alert("Failed to fetch invoice details.");
+                    return;
+                }
+                const invoice = await invRes.json();
+                
+                const adjRes = await fetch(`${API_BASE}/adjustments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(adjustmentData)
+                });
+                
+                if (!adjRes.ok) {
+                    const errData = await adjRes.json();
+                    alert("Failed to save adjustment: " + (errData.error || "Unknown error"));
+                    return;
+                }
+                
+                let newPaid = invoice.paidAmount || 0;
+                if (type === 'Credit') {
+                    newPaid += amount;
+                } else if (type === 'Debit') {
+                    newPaid -= amount;
+                }
+                const newBalance = invoice.netAmount - newPaid;
+                const newStatus = newBalance <= 0 ? 'Paid' : (newPaid > 0 ? 'Partial' : 'Unpaid');
+                
+                const updateRes = await fetch(`${API_BASE}/invoices/${invoiceId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paidAmount: newPaid,
+                        balanceAmount: newBalance,
+                        status: newStatus
+                    })
+                });
+                
+                if (updateRes.ok) {
+                    alert("Adjustment applied successfully!");
+                    openInvoiceDetailsModal(invoiceId);
+                    loadData();
+                } else {
+                    alert("Adjustment saved, but failed to update invoice balance.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred while saving the adjustment.");
+            }
+        }
+
+        async function emailInvoice(id) {
+            try {
+                const res = await fetch(`${API_BASE}/invoices/${id}`);
+                if (!res.ok) {
+                    alert("Failed to fetch invoice details.");
+                    return;
+                }
+                const invoice = await res.json();
+                if (!invoice || !invoice.client) {
+                    alert("Invoice or Client details not found.");
+                    return;
+                }
+                const email = invoice.client.email || '';
+                if (!email) {
+                    alert("Client does not have an email address configured.");
+                    return;
+                }
+                const subject = `Invoice ${invoice.invoiceNumber} - Sohar Dental Lab`;
+                const body = `Dear ${invoice.client.name},\n\nPlease find details for Invoice #${invoice.invoiceNumber}.\nAmount: ₹${invoice.netAmount}\nBalance: ₹${invoice.balanceAmount}\n\nRegards,\nSohar Dental Lab`;
+                window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            } catch (err) {
+                console.error(err);
+                alert("Error sending email.");
+            }
+        }
+
+        async function whatsappInvoice(id) {
+            try {
+                const res = await fetch(`${API_BASE}/invoices/${id}`);
+                if (!res.ok) {
+                    alert("Failed to fetch invoice details.");
+                    return;
+                }
+                const invoice = await res.json();
+                if (!invoice || !invoice.client) {
+                    alert("Invoice or Client details not found.");
+                    return;
+                }
+                let phone = invoice.client.cellPhone || invoice.client.phone || '';
+                if (!phone) {
+                    alert("Client does not have a phone number configured.");
+                    return;
+                }
+                phone = phone.replace(/[^\d+]/g, '');
+                const message = `Hello ${invoice.client.name}, here is your Invoice #${invoice.invoiceNumber} details:\nAmount: ₹${invoice.netAmount}\nBalance: ₹${invoice.balanceAmount}\nThank you!`;
+                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`, '_blank');
+            } catch (err) {
+                console.error(err);
+                alert("Error sending WhatsApp message.");
+            }
+        }
+
+        async function openNewAdjustmentModal() {
+            const today = new Date().toISOString().split('T')[0];
+            let nextNum = Date.now().toString().slice(-5);
+            try {
+                const res = await fetch(`${API_BASE}/adjustments`);
+                if (res.ok) {
+                    const adjs = await res.json();
+                    nextNum = (adjs.length + 1).toString().padStart(5, '0');
+                }
+            } catch(e) { console.error(e); }
+
+            openAdjustmentModalForm({
+                id: null,
+                adjustmentNumber: nextNum,
+                date: today,
+                clientId: '',
+                invoiceId: '',
+                amount: 0,
+                type: currentAdjustmentType,
+                reason: ''
+            });
+        }
+
+        async function openEditAdjustmentModal(id) {
+            try {
+                const res = await fetch(`${API_BASE}/adjustments`);
+                const adjs = await res.json();
+                const adj = adjs.find(a => a.id === id);
+                if (!adj) {
+                    alert("Adjustment not found.");
+                    return;
+                }
+                
+                let subType = '';
+                let notes = '';
+                if (adj.reason) {
+                    const parts = adj.reason.split(': ');
+                    subType = parts[0] || '';
+                    notes = parts.slice(1).join(': ') || '';
+                }
+                
+                openAdjustmentModalForm({
+                    id: adj.id,
+                    adjustmentNumber: adj.adjustmentNumber,
+                    date: new Date(adj.date).toISOString().split('T')[0],
+                    clientId: adj.clientId,
+                    invoiceId: adj.invoiceId || '',
+                    amount: adj.amount,
+                    type: adj.type,
+                    subType: subType,
+                    notes: notes
+                });
+            } catch(e) {
+                console.error(e);
+                alert("Error loading adjustment details.");
+            }
+        }
+
+        async function openAdjustmentModalForm(data) {
+            const isEdit = data.id !== null;
+            const clientOptions = allClients.map(c => `<option value="${c.name}">`).join('');
+            const title = isEdit ? `Edit ${data.type} Adjustment` : `New ${data.type} Adjustment`;
+            
+            const subTypes = data.type === 'Credit' 
+                ? ['Write Off', 'Discount', 'Round Off', 'Refund'] 
+                : ['Debit Note', 'Surcharge', 'Interest'];
+            
+            const subTypeOptions = subTypes.map(st => `
+                <option value="${st}" ${data.subType === st ? 'selected' : ''}>${st}</option>
+            `).join('');
+
+            const contentHtml = `
+                <div style="margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                    <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Client (Search & Select)</label>
+                    <input type="text" id="adj-client-search" list="adj-client-list" value="${data.clientId ? (allClients.find(c => c.id === data.clientId) || {}).name || '' : ''}" placeholder="Type to search client..." style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px;" onchange="handleAdjClientChange(this.value)">
+                    <datalist id="adj-client-list">${clientOptions}</datalist>
+                    <input type="hidden" id="adj-client-id" value="${data.clientId || ''}">
+                </div>
+                
+                <div style="margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                    <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Applied To (Invoice)</label>
+                    <select id="adj-invoice-id" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; background:#fff;">
+                        <option value="">-- Select Invoice --</option>
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                    <div>
+                        <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Amount</label>
+                        <input type="number" id="adj-modal-amount" value="${data.amount}" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Adj. Date</label>
+                        <input type="date" id="adj-modal-date" value="${data.date}" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Adj. #</label>
+                        <input type="text" id="adj-modal-ref" value="${data.adjustmentNumber}" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                    <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Adjustment Type</label>
+                    <select id="adj-modal-subtype" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; background:#fff;">
+                        ${subTypeOptions}
+                    </select>
+                </div>
+
+                <div style="margin-bottom:15px; font-family: 'Inter', sans-serif;">
+                    <label style="display:block; font-size:12px; color:#4b5563; margin-bottom:4px; font-weight: 500;">Notes</label>
+                    <input type="text" id="adj-modal-notes" value="${data.notes || ''}" placeholder="Enter notes..." style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; font-size: 14px; box-sizing: border-box;">
+                </div>
+            `;
+
+            const footerHtml = `
+                <div style="display:flex; width:100%; justify-content:flex-end; gap:10px; font-family: 'Inter', sans-serif;">
+                    <button onclick="closeAdjustmentModal()" style="padding:8px 16px; border:1px solid #ddd; background:none; border-radius:4px; cursor:pointer;">Cancel</button>
+                    <button onclick="saveAdjustmentModalData(${data.id}, '${data.type}')" style="padding:8px 16px; border:none; background:#ec4899; color:#fff; border-radius:4px; cursor:pointer; font-weight:600;">Save</button>
+                </div>
+            `;
+
+            const modalHtml = `
+                <div id="adjustment-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000; font-family: 'Inter', sans-serif;">
+                    <div style="background:#fff; width:450px; padding:20px; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                        <h3 style="margin:0 0 20px 0; font-size:20px; font-weight:600; color:#111827; border-bottom:1px solid #eee; padding-bottom:10px;">${title}</h3>
+                        <div>${contentHtml}</div>
+                        <div style="display:flex; width:100%; margin-top:20px;">${footerHtml}</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            if (data.clientId) {
+                await loadClientInvoicesForAdjustment(data.clientId, data.invoiceId);
+            }
+        }
+
+        window.handleAdjClientChange = async function(name) {
+            const client = allClients.find(c => c.name === name);
+            if (client) {
+                document.getElementById('adj-client-id').value = client.id;
+                await loadClientInvoicesForAdjustment(client.id);
+            } else {
+                document.getElementById('adj-client-id').value = '';
+                document.getElementById('adj-invoice-id').innerHTML = '<option value="">-- Select Invoice --</option>';
+            }
+        };
+
+        async function loadClientInvoicesForAdjustment(clientId, preSelectedInvoiceId) {
+            const select = document.getElementById('adj-invoice-id');
+            if (!select) return;
+            select.innerHTML = '<option value="">Loading invoices...</option>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/invoices?clientId=${clientId}`);
+                if (res.ok) {
+                    let invoices = await res.json();
+                    invoices = invoices.filter(inv => inv.status !== 'Cancelled');
+                    
+                    let options = '<option value="">-- Select Invoice --</option>';
+                    invoices.forEach(inv => {
+                        const isSelected = preSelectedInvoiceId && parseInt(preSelectedInvoiceId) === inv.id;
+                        options += `
+                            <option value="${inv.id}" ${isSelected ? 'selected' : ''}>
+                                ${inv.invoiceNumber} (Amt: ₹${inv.netAmount}, Bal: ₹${inv.balanceAmount})
+                            </option>
+                        `;
+                    });
+                    select.innerHTML = options;
+                } else {
+                    select.innerHTML = '<option value="">Error loading invoices</option>';
+                }
+            } catch(e) {
+                console.error(e);
+                select.innerHTML = '<option value="">Error loading invoices</option>';
+            }
+        }
+
+        window.closeAdjustmentModal = function() {
+            const modal = document.getElementById('adjustment-modal');
+            if (modal) modal.remove();
+        };
+
+        window.saveAdjustmentModalData = async function(id, mainType) {
+            const clientIdVal = document.getElementById('adj-client-id').value;
+            const invoiceIdVal = document.getElementById('adj-invoice-id').value;
+            const amount = parseFloat(document.getElementById('adj-modal-amount').value) || 0;
+            const date = document.getElementById('adj-modal-date').value;
+            const ref = document.getElementById('adj-modal-ref').value.trim();
+            const subType = document.getElementById('adj-modal-subtype').value;
+            const notes = document.getElementById('adj-modal-notes').value.trim();
+
+            if (!clientIdVal) {
+                alert("Please select a client.");
+                return;
+            }
+            if (amount <= 0) {
+                alert("Please enter a valid amount.");
+                return;
+            }
+            if (!date) {
+                alert("Please select a date.");
+                return;
+            }
+            if (!ref) {
+                alert("Please enter a reference number.");
+                return;
+            }
+
+            const clientId = parseInt(clientIdVal);
+            const invoiceId = invoiceIdVal ? parseInt(invoiceIdVal) : null;
+
+            if (id) {
+                try {
+                    const deleteRes = await fetch(`${API_BASE}/adjustments/${id}`, { method: 'DELETE' });
+                    if (!deleteRes.ok) {
+                        alert("Failed to reset previous adjustment balance.");
+                        return;
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert("Error updating previous adjustment.");
+                    return;
+                }
+            }
+
+            const adjustmentData = {
+                adjustmentNumber: ref,
+                clientId: clientId,
+                invoiceId: invoiceId,
+                amount: amount,
+                date: date,
+                type: mainType,
+                reason: subType + (notes ? ': ' + notes : '')
+            };
+
+            try {
+                const adjRes = await fetch(`${API_BASE}/adjustments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(adjustmentData)
+                });
+                
+                if (!adjRes.ok) {
+                    const err = await adjRes.json();
+                    alert("Failed to save adjustment: " + (err.error || "Unknown error"));
+                    return;
+                }
+
+                if (invoiceId) {
+                    const invRes = await fetch(`${API_BASE}/invoices/${invoiceId}`);
+                    if (invRes.ok) {
+                        const invoice = await invRes.json();
+                        let newPaid = invoice.paidAmount || 0;
+                        if (mainType === 'Credit') {
+                            newPaid += amount;
+                        } else if (mainType === 'Debit') {
+                            newPaid -= amount;
+                        }
+                        const newBalance = invoice.netAmount - newPaid;
+                        const newStatus = newBalance <= 0 ? 'Paid' : (newPaid > 0 ? 'Partial' : 'Unpaid');
+                        
+                        await fetch(`${API_BASE}/invoices/${invoiceId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                paidAmount: newPaid,
+                                balanceAmount: newBalance,
+                                status: newStatus
+                            })
+                        });
+                    }
+                }
+
+                alert("Adjustment saved successfully!");
+                closeAdjustmentModal();
+                loadData();
+            } catch(e) {
+                console.error(e);
+                alert("Error saving adjustment.");
+            }
+        };
+
+        // Global bindings
+        window.openInvoiceDetailsModal = openInvoiceDetailsModal;
+        window.openNewAdjustmentModal = openNewAdjustmentModal;
+        window.openEditAdjustmentModal = openEditAdjustmentModal;
+        window.saveAdjustmentModalData = saveAdjustmentModalData;
+        window.closeAdjustmentModal = closeAdjustmentModal;
+        window.deleteInvoice = deleteInvoice;
+        window.toggleCreditAdjustmentForm = toggleCreditAdjustmentForm;
+        window.saveCreditAdjustment = saveCreditAdjustment;
+        window.emailInvoice = emailInvoice;
+        window.whatsappInvoice = whatsappInvoice;
+        window.deleteAdjustment = deleteAdjustment;
+        window.loadAdjustments = loadAdjustments;
+        window.loadData = loadData;
+        window.loadInvoices = loadInvoices;
+        window.loadGenerateInvoices = loadGenerateInvoices;
+        window.loadReceipts = loadReceipts;
+        window.openEditModal = openEditModal;
+        window.closeEditModal = closeEditModal;
+        window.openNewPaymentModal = openNewPaymentModal;
+        window.saveEditData = saveEditData;
+        window.deleteReceipt = deleteReceipt;
+    
+</script>
 </body>
 </html>
-

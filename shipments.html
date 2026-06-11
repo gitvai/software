@@ -30,14 +30,14 @@
     <div class="container" style="display:flex; min-height: calc(100vh - 60px);">
         <!-- Sidebar -->
         <aside style="width: 200px; background: #f3f4f6; border-right: 1px solid #ddd; padding: 0;">
-            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563;">Final Delivery</div>
+            <div style="padding: 5px 10px; font-weight: 700; font-size: 13px; color: #4b5563;">Final Delivery</div>
             <div class="sidebar-items">
                 <a href="javascript:void(0)" class="sidebar-link active" onclick="loadShipments('all', 'Shipment Notes')">Shipment Notes</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrdersToDeliver('ready', 'Ship products')">Ship products</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrdersToDeliver('outbox', 'Outbox')">Outbox</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrdersToDeliver('today', 'Shipping Today')">Shipping Today</a>
             </div>
-            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">TryIn</div>
+            <div style="padding: 5px 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 10px;">TryIn</div>
             <div class="sidebar-items">
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('history', 'Out History')">Out History</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('ship', 'Ship TryIns')">Ship TryIns</a>
@@ -45,7 +45,7 @@
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('return-h', 'Return History')">Return History</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadTryIn('return-t', 'Return TryIns')">Return TryIns</a>
             </div>
-            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Backup & Export</div>
+            <div style="padding: 5px 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 10px;">Backup & Export</div>
             <div class="sidebar-items">
                 <a href="/api/backup/system" class="sidebar-link"><i class="fas fa-file-archive"></i> System Backup (.zip)</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="showExportModal()"><i class="fas fa-file-export"></i> Export Data</a>
@@ -176,7 +176,7 @@
                                     <div style="border:1px solid #ddd; padding:10px; flex:1;">
                                         <div style="font-size:12px; color:#6b7280;">Price List</div>
                                         <div style="display:flex; gap:10px; margin-top:5px;">
-                                            <button class="btn-toolbar" onclick="alert('Email Price List coming soon!')"><i class="fas fa-paper-plane"></i> Email</button>
+                                            <button class="btn-toolbar" onclick="emailClient()"><i class="fas fa-paper-plane"></i> Email</button>
                                             <button class="btn-toolbar" onclick="printPriceList()"><i class="fas fa-print"></i> Print</button>
                                         </div>
                                     </div>
@@ -299,11 +299,12 @@
     <style>
         .sidebar-link {
             display: block;
-            padding: 8px 15px;
+            padding: 6px 15px;
             font-size: 13px;
             color: #1f2937;
             text-decoration: none;
             border-left: 3px solid transparent;
+            margin-bottom: 2px;
         }
         .sidebar-link:hover { background: #e5e7eb; }
         .sidebar-link.active {
@@ -355,66 +356,7 @@
     </style>
 
     <script>
-        // Floating Debug Panel for real-time diagnostics
-        (function() {
-            const panel = document.createElement('div');
-            panel.id = 'debug-console-panel';
-            panel.style.position = 'fixed';
-            panel.style.bottom = '10px';
-            panel.style.right = '10px';
-            panel.style.width = '350px';
-            panel.style.height = '200px';
-            panel.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
-            panel.style.color = '#00ff00';
-            panel.style.fontFamily = 'monospace';
-            panel.style.fontSize = '11px';
-            panel.style.padding = '10px';
-            panel.style.borderRadius = '8px';
-            panel.style.overflowY = 'auto';
-            panel.style.zIndex = '999999';
-            panel.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-            panel.style.pointerEvents = 'auto';
-            panel.innerHTML = '<div style="font-weight:bold;border-bottom:1px solid #00ff00;padding-bottom:3px;margin-bottom:5px;cursor:pointer;" onclick="this.parentElement.style.display=\'none\'">Console Debug Logs (Click to Hide)</div>';
-            
-            // Wait for DOM to append
-            if (document.body) {
-                document.body.appendChild(panel);
-            } else {
-                window.addEventListener('DOMContentLoaded', () => document.body.appendChild(panel));
-            }
 
-            function logToPanel(msg, color = '#00ff00') {
-                const line = document.createElement('div');
-                line.style.color = color;
-                line.style.marginBottom = '3px';
-                line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-                panel.appendChild(line);
-                panel.scrollTop = panel.scrollHeight;
-            }
-
-            // Override console methods
-            const origLog = console.log;
-            console.log = function(...args) {
-                origLog.apply(console, args);
-                logToPanel(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), '#00ff00');
-            };
-
-            const origError = console.error;
-            console.error = function(...args) {
-                origError.apply(console, args);
-                logToPanel(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), '#ff0000');
-            };
-
-            // Global Error Handlers
-            window.onerror = function(message, source, lineno, colno, error) {
-                console.error(`JS Error: ${message} at ${source}:${lineno}:${colno}`);
-                return false;
-            };
-
-            window.onunhandledrejection = function(event) {
-                console.error(`Promise Rejection: ${event.reason ? event.reason.message || event.reason : 'Unknown reason'}`);
-            };
-        })();
 
         const API_BASE = 'https://software-e857.onrender.com/api';
         let currentMode = 'notes';

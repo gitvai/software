@@ -1,4 +1,4 @@
-const API_BASE = 'https://software-e857.onrender.com/api';
+const API_BASE = '/api';
 
 // --- DATA FETCHING ---
 async function fetchData(endpoint) {

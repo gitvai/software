@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -860,7 +860,7 @@
     </div>
 
     <script>
-        const API_BASE = 'https://software-e857.onrender.com/api';
+        const API_BASE = '/api';
 
         function createTeethGrid(selection) {
             if (!selection || selection.trim() === "") return '-';
@@ -1237,25 +1237,16 @@
                     headers = ['Date', 'Staff Name', 'Status', 'In Time', 'Out Time'];
                     rows = [['2024-05-07', 'John Doe', 'Present', '09:00 AM', '06:00 PM']]; // Mock
                 } else {
-                    // Generic handler for others
-                    const res = await fetch(`${API_BASE}/orders`);
-                    data = await res.json();
-                    headers = ['Order Date', 'Due Date', 'Order #', 'Client', 'Patient', 'Product', 'Teeth', 'Units', 'Model #', 'Dept', 'Assign To', 'Amount', 'Status'];
-                    rows = data.map(o => [
-                        o.receivedDate ? new Date(o.receivedDate).toLocaleDateString('en-GB') : '-',
-                        o.dueDate ? new Date(o.dueDate).toLocaleDateString('en-GB') : '-',
-                        o.orderNumber || o.id,
-                        o.client ? o.client.name : 'Unknown',
-                        o.patientName || '-',
-                        o.productName || o.productType || '-',
-                        createTeethGrid(o.teethSelection),
-                        o.units || '1',
-                        o.modelNumber || '-',
-                        o.department || '-',
-                        o.assignTo || '-',
-                        (o.totalAmount || 0).toFixed(2),
-                        o.status
-                    ]);
+                    // Fallback for unimplemented reports
+                    document.getElementById('report-viewer-content').innerHTML = `
+                        <div style="text-align:center; padding:50px; color:#666;">
+                            <i class="fas fa-exclamation-triangle" style="font-size:30px; margin-bottom:15px; color:#f59e0b;"></i>
+                            <p style="font-size:16px; font-weight:600;">Report Logic Not Implemented</p>
+                            <p>The data processing logic for "<strong>${name}</strong>" is not yet available.</p>
+                            <button onclick="document.getElementById('report-modal').style.display='none'" style="margin-top:20px; padding:8px 20px; background:#3b82f6; color:#fff; border:none; border-radius:4px; cursor:pointer;">Close</button>
+                        </div>
+                    `;
+                    return;
                 }
 
                 renderTableReport(name, headers, rows);

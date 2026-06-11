@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import json
 import os
 from reportlab.lib.pagesizes import A4
@@ -39,7 +39,7 @@ def number_to_words(n):
 
 def generate_invoice(data, output):
     # Set margins
-    doc = SimpleDocTemplate(output, pagesize=A4, leftMargin=35, rightMargin=35, topMargin=20, bottomMargin=20)
+    doc = SimpleDocTemplate(output, pagesize=A4, leftMargin=80, rightMargin=80, topMargin=75, bottomMargin=75)
     styles = getSampleStyleSheet()
     
     # Custom Styles
@@ -104,7 +104,7 @@ def generate_invoice(data, output):
         ]
     ]
     
-    info_table = Table(info_table_data, colWidths=[315, 210])
+    info_table = Table(info_table_data, colWidths=[255, 180])
     info_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 1.5, colors.black), ('VALIGN', (0,0), (-1,-1), 'TOP'), ('LEFTPADDING', (0,0), (-1,-1), 8), ('RIGHTPADDING', (0,0), (-1,-1), 8), ('TOPPADDING', (0,0), (-1,-1), 8), ('BOTTOMPADDING', (0,0), (-1,-1), 8)]))
     elements.append(info_table)
     elements.append(Spacer(1, 15))
@@ -164,7 +164,7 @@ def generate_invoice(data, output):
                 [Paragraph("".join(map(str, quads[4])), styles["TableTeeth"]), Paragraph("".join(map(str, quads[3])), styles["TableTeeth"])]
             ]
             # Use fixed column widths but allow dynamic row heights for alignment
-            teeth_grid = Table(grid_data, colWidths=[54.5, 54.5])
+            teeth_grid = Table(grid_data, colWidths=[42.5, 42.5])
             teeth_grid.setStyle(TableStyle([
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
                 ('LEFTPADDING', (0,0), (-1,-1), 2),
@@ -190,7 +190,7 @@ def generate_invoice(data, output):
 
     table_data.append(["", "", "", "", "", Paragraph("<b>Total :</b>", styles["TableTextRight"]), Paragraph(f"<b>{total_units}</b>", styles["TableTextCenter"]), "", Paragraph(f"<b>{total_amount:.2f}</b>", styles["TableTextRight"])])
 
-    col_widths = [20, 45, 65, 55, 80, 115, 35, 50, 60]
+    col_widths = [15, 35, 60, 50, 70, 85, 25, 45, 50]
     items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
     items_style = [('GRID', (0,0), (-1,-1), 1, colors.black), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,0), 'CENTER'), ('ALIGN', (0,-1), (-1,-1), 'RIGHT'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,0), 9), ('LEFTPADDING', (0,0), (-1,-1), 3), ('RIGHTPADDING', (0,0), (-1,-1), 3)]
@@ -203,14 +203,24 @@ def generate_invoice(data, output):
 
     # ---------------- GRAND TOTAL BAR ----------------
     grand_total_data = [[Paragraph(f"<b>Grand Total : OMR {number_to_words(int(total_amount))}</b>", styles["Normal"]), Paragraph(f"<b>OMR : {total_amount:.2f}</b>", styles["NormalRight"])]]
-    grand_total_table = Table(grand_total_data, colWidths=[375, 150])
+    grand_total_table = Table(grand_total_data, colWidths=[315, 120])
     grand_total_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 1.5, colors.black), ('LEFTPADDING', (0,0), (-1,-1), 10), ('RIGHTPADDING', (0,0), (-1,-1), 10), ('TOPPADDING', (0,0), (-1,-1), 8), ('BOTTOMPADDING', (0,0), (-1,-1), 8)]))
     elements.append(grand_total_table)
 
     elements.append(Spacer(1, 50))
     elements.append(Paragraph("Authorized Signatory", styles["NormalRight"]))
 
-    doc.build(elements)
+    def draw_page_border(canvas, doc):
+        canvas.saveState()
+        canvas.setStrokeColor(colors.black)
+        canvas.setLineWidth(1.5)
+        # Outer border
+        canvas.rect(37.5, 37.5, 595.27 - 75, 841.89 - 75)
+        # Inner border
+        canvas.rect(41, 41, 595.27 - 82, 841.89 - 82)
+        canvas.restoreState()
+
+    doc.build(elements, onFirstPage=draw_page_border, onLaterPages=draw_page_border)
 
 if __name__ == "__main__":
     if len(sys.argv) < 3: sys.exit(1)

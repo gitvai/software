@@ -1,3 +1,10 @@
+// Auto-redirect from file:/// to localhost:5000 to prevent CORS and Origin security errors
+if (window.location.protocol === 'file:') {
+    const filename = window.location.pathname.split('/').pop() || 'index.html';
+    const newUrl = 'http://localhost:5000/' + filename + window.location.search + window.location.hash;
+    window.location.replace(newUrl);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Create curtain element
     const curtain = document.createElement('div');

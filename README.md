@@ -34,7 +34,7 @@ The frontend consists of static HTML, CSS, and JS files. You can access it in tw
 
 #### Option A: Open directly (Recommended for quick view)
 Simply open the `index.html` file located in the root directory in any modern web browser.
-- Path: `c:\Users\vaibh_1mm1mpt\Desktop\crm\index.html`
+- Path: `index.html` (Open this file in your browser)
 
 #### Option B: Using a Live Server
 If you use VS Code, you can use the "Live Server" extension to serve the root directory.

@@ -19,6 +19,7 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             border: 1px solid #ccc;
             color: #333;
+            overflow: visible;
         }
 
         #grid-settings-modal .modal-header {
@@ -214,6 +215,140 @@
         #grid-settings-modal .btn-modal-action:hover {
             background: #f8f9fa;
         }
+
+        /* Improved Sidebar Styles */
+        .sidebar-items {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 8px 20px;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            justify-content: space-between;
+        }
+
+        .sidebar-link:hover {
+            background-color: #f9fafb;
+            color: #111827;
+        }
+
+        .sidebar-link.active {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-left-color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .sidebar-heading {
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+        /* PickUp Request Form Styles */
+        .pickup-container {
+            font-family: Arial, sans-serif;
+            background: #fff;
+            padding: 20px;
+        }
+        .pickup-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .pickup-box {
+            border: 1px solid #a9a9a9;
+            padding: 5px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+        .pickup-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .pickup-col {
+            flex: 1;
+        }
+        .pickup-label {
+            font-size: 13px;
+            color: #555;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .pickup-input {
+            width: 100%;
+            padding: 3px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+        }
+        .pickup-select {
+            width: 100%;
+            padding: 3px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+            background: #fff;
+        }
+        .pickup-btn-small {
+            padding: 2px 5px;
+            font-size: 11px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            cursor: pointer;
+            color: #0056b3;
+            font-weight: bold;
+        }
+        .pickup-btn-small:hover {
+            background: #e9e9e9;
+        }
+        .pickup-link {
+            color: #0056b3;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .pickup-link:hover {
+            text-decoration: underline;
+        }
+        .pickup-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px dotted #ccc;
+            margin-top: 10px;
+        }
+        .pickup-btn-save {
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 8px 15px;
+            color: #0056b3;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .pickup-btn-save:hover { background: #f0f0f0; }
+        .pickup-btn-cancel {
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 8px 15px;
+            color: #777;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .pickup-btn-cancel:hover { background: #f0f0f0; }
     </style>
 </head>
 
@@ -237,42 +372,49 @@
 
     <div class="container" style="display:flex; min-height: calc(100vh - 60px);">
         <!-- Sidebar -->
-        <aside style="width: 200px; background: #f3f4f6; border-right: 1px solid #ddd; padding: 0;">
-            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563;">Pickup Requests</div>
+        <aside style="width: 220px; background: #f9fafb; border-right: 1px solid #e5e7eb; padding: 10px 0; display: block;">
+            <div class="sidebar-heading">Pickup Requests</div>
             <div class="sidebar-items">
                 <a href="javascript:void(0)" class="sidebar-link active" onclick="showSection('pickup-search')">Search</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="showSection('do-pickups')">Do Pickups</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="showSection('create-orders')">Create Orders</a>
             </div>
-            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Orders
-            </div>
+            
+            <div class="sidebar-heading">Status</div>
             <div class="sidebar-items">
-                <a href="javascript:void(0)" class="sidebar-link active" onclick="loadOrders('all', 'Search Orders')">Search</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="showSection('section-calendar')">Calendar</a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="showSection('section-overview')">Overview</a>
+            </div>
+
+            <div class="sidebar-heading">Orders</div>
+            <div class="sidebar-items">
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('all', 'Search Orders')">Search</a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('In Production', 'In Production')">In Production
-                    <span
-                        style="float:right; width:10px; height:10px; background:#6366f1; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Complete', 'Complete')">Complete <span
-                        style="float:right; width:10px; height:10px; background:#10b981; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('On Hold', 'On Hold')">On Hold <span
-                        style="float:right; width:10px; height:10px; background:#f59e0b; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Cancelled', 'Cancelled')">Cancelled <span
-                        style="float:right; width:10px; height:10px; background:#ef4444; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Try In', 'Out for try in')">Out for try in <span
-                        style="float:right; width:10px; height:10px; background:#ec4899; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Delivered', 'Delivered')">Delivered <span
-                        style="float:right; width:10px; height:10px; background:#1e3a8a; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('overdue', 'OverDue')">OverDue <span
-                        style="float:right; width:10px; height:10px; background:#ef4444; border-radius:2px; margin-top:4px;"></span></a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('repeat', 'Repeat/Repair')">Repeat/Repair <span
-                        style="float:right; width:10px; height:10px; background:#9ca3af; border-radius:2px; margin-top:4px;"></span></a>
+                    <span style="width:10px; height:10px; background:#6366f1; border-radius:2px;"></span></a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Complete', 'Complete')">Complete 
+                    <span style="width:10px; height:10px; background:#10b981; border-radius:2px;"></span></a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('On Hold', 'On Hold')">On Hold 
+                    <span style="width:10px; height:10px; background:#f59e0b; border-radius:2px;"></span></a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Cancelled', 'Cancelled')">Cancelled 
+                    <span style="width:10px; height:10px; background:#ef4444; border-radius:2px;"></span></a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Try In', 'Out for try in')">Out for try in 
+                    <span style="width:10px; height:10px; background:#ec4899; border-radius:2px;"></span></a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('Delivered', 'Delivered')">Delivered 
+                    <span style="width:10px; height:10px; background:#1e3a8a; border-radius:2px;"></span></a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('overdue', 'OverDue')">OverDue 
+                    <span style="width:10px; height:10px; background:#ef4444; border-radius:2px;"></span></a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="loadOrders('repeat', 'Repeat/Repair')">Repeat/Repair 
+                    <span style="width:10px; height:10px; background:#9ca3af; border-radius:2px;"></span></a>
             </div>
-            <div style="padding: 10px; font-weight: 700; font-size: 13px; color: #4b5563; margin-top: 20px;">Backup &
-                Export</div>
+            
+            <div class="sidebar-heading">Backup & Export</div>
             <div class="sidebar-items">
-                <a href="/api/backup/system" class="sidebar-link"><i
-                        class="fas fa-file-archive"></i> System Backup (.zip)</a>
-                <a href="javascript:void(0)" class="sidebar-link" onclick="showExportModal()"><i
-                        class="fas fa-file-export"></i> Export Data</a>
+                <a href="/api/backup/system" class="sidebar-link">
+                    <span><i class="fas fa-file-archive" style="width:20px; text-align:center; margin-right:5px;"></i> System Backup (.zip)</span>
+                </a>
+                <a href="javascript:void(0)" class="sidebar-link" onclick="showExportModal()">
+                    <span><i class="fas fa-file-export" style="width:20px; text-align:center; margin-right:5px;"></i> Export Data</span>
+                </a>
             </div>
         </aside>
 
@@ -288,6 +430,252 @@
                         onclick="showSection('new-pickup')">+ New Pickup Request</button>
                 </div>
             </div>
+
+            <!-- New Pickup Request Section -->
+            <div id="section-new-pickup" style="display:none;" class="pickup-container">
+                <div class="pickup-title">PickUp Request</div>
+                
+                <div style="margin-bottom: 10px;">
+                    <label class="pickup-label">Client</label>
+                    <select id="new-pickup-client" class="pickup-select" style="width: 400px;">
+                        <option value="">Select a client</option>
+                    </select>
+                </div>
+
+                <div class="pickup-row">
+                    <div class="pickup-col pickup-box">
+                        <div style="margin-bottom: 5px;">
+                            <label class="pickup-label">Request #</label>
+                            <input type="text" class="pickup-input" value="00001" readonly style="width: 100px; background: #f5f5f5;">
+                        </div>
+                        <div>
+                            <label class="pickup-label">Requested On</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" class="pickup-input" value="11/06/26" style="width: 80px;">
+                                <input type="text" class="pickup-input" value="16:34" style="width: 60px;">
+                                <i class="far fa-clock" style="margin-top: 5px; color: #555;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pickup-col pickup-box">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <label class="pickup-label">Assigned To Staff</label>
+                            <div style="display: flex; gap: 5px;">
+                                <select id="new-pickup-staff" class="pickup-select" style="width: 120px;" onchange="handleNewPickupStaffChange(this)">
+                                    <option value="">Unassigned</option>
+                                    <option value="__add_new__" style="font-weight:bold; color:#3b82f6;">+ Add New Staff...</option>
+                                </select>
+                                <button class="pickup-btn-small" onclick="addStaffQuick()">+</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="pickup-label">Pickup Scheduled</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" class="pickup-input" value="11/06/26" style="width: 80px;">
+                                <input type="text" class="pickup-input" value="17:04" style="width: 60px;">
+                                <i class="far fa-clock" style="margin-top: 5px; color: #555;"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pickup-col pickup-box">
+                        <div style="margin-bottom: 5px;">
+                            <label class="pickup-label">
+                                <input type="checkbox" style="vertical-align: middle; margin-right: 3px;"> Pickup done
+                            </label>
+                            <select class="pickup-select" style="width: 100px; margin-top: 2px;">
+                                <option value=""></option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="pickup-label">Pickup done on</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" class="pickup-input" style="width: 80px;">
+                                <input type="text" class="pickup-input" value="--:--" style="width: 60px; background: #f5f5f5;" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pickup-box" style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label class="pickup-label">Patient</label>
+                        <input type="text" class="pickup-input">
+                    </div>
+                    <div>
+                        <label class="pickup-label">Due On</label>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="text" class="pickup-input" value="11/06/26" style="width: 80px;">
+                            <span>@</span>
+                            <select class="pickup-select" style="width: 80px;">
+                                <option value=""></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="pickup-label">Shade</label>
+                        <div style="display: flex; gap: 5px;">
+                            <select class="pickup-select"><option value=""></option></select>
+                            <select class="pickup-select"><option value=""></option></select>
+                            <select class="pickup-select"><option value=""></option></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pickup-box" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 5px;">
+                    <div id="enclosures-display-area" style="font-size: 14px; color: #555; display: flex; flex-wrap: wrap; gap: 5px;">
+                        <span id="no-enclosures-text">No Enclosures found</span>
+                    </div>
+                    <a href="javascript:void(0)" class="pickup-link" onclick="openEnclosuresModal()">Add Enclosures</a>
+                </div>
+
+                <div class="pickup-row">
+                    <div class="pickup-col pickup-box">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <label class="pickup-label">Pickup Location</label>
+                            <div>
+                                <button class="pickup-btn-small" onclick="searchLocation('pickup-location-input')"><i class="fas fa-search"></i></button>
+                                <button class="pickup-btn-small" onclick="addLocation('pickup-location-input')">+</button>
+                            </div>
+                        </div>
+                        <textarea id="pickup-location-input" class="pickup-input" rows="4"></textarea>
+                    </div>
+                    <div class="pickup-col pickup-box">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <label class="pickup-label">Drop Location</label>
+                            <div>
+                                <button class="pickup-btn-small" onclick="searchLocation('drop-location-input')"><i class="fas fa-search"></i></button>
+                                <button class="pickup-btn-small" onclick="addLocation('drop-location-input')">+</button>
+                            </div>
+                        </div>
+                        <textarea id="drop-location-input" class="pickup-input" rows="4"></textarea>
+                    </div>
+                </div>
+
+                <div id="pickup-products-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Product rows will be added here -->
+                </div>
+
+                <div class="pickup-footer">
+                    <a href="javascript:void(0)" class="pickup-link" style="font-weight: bold; font-size: 15px;" onclick="addPickupProductRow()">+Add Product</a>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="pickup-btn-save" onclick="saveFullPickupRequest()">Save Pickup Request</button>
+                        <button class="pickup-btn-cancel" onclick="showSection('section-orders')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enclosures Modal -->
+            <div id="enclosures-modal" class="modal-overlay" style="display:none; z-index: 2000;">
+                <div class="modal-content" style="width: 400px; padding: 0; border-radius: 8px; overflow: hidden; background: #fff;">
+                    <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 16px; color: #333;">Add Enclosures</h3>
+                        <button onclick="closeEnclosuresModal()" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">&times;</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Upper Impression"> Upper Impression</label>
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Lower Impression"> Lower Impression</label>
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Upper Model"> Upper Model</label>
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Lower Model"> Lower Model</label>
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Bite Registration"> Bite Registration</label>
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Articulator"> Articulator</label>
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Implant Parts"> Implant Parts</label>
+                            <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;"><input type="checkbox" class="enclosure-cb" value="Old Crown/Bridge"> Old Crown/Bridge</label>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 13px; color: #555; display: block; margin-bottom: 5px;">Other Enclosures</label>
+                            <input type="text" id="other-enclosure-input" style="width: 100%; padding: 8px; border: 1px solid #ccc; font-size: 13px; border-radius: 4px;" placeholder="Type other enclosures separated by comma">
+                        </div>
+                    </div>
+                    <div style="padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #ddd; display: flex; justify-content: flex-end; gap: 10px;">
+                        <button onclick="closeEnclosuresModal()" style="padding: 6px 15px; border: 1px solid #ccc; background: #fff; cursor: pointer; border-radius: 4px;">Cancel</button>
+                        <button onclick="saveEnclosures()" style="padding: 6px 15px; border: none; background: #3b82f6; color: #fff; cursor: pointer; border-radius: 4px;">Save</button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+
+                
+                function handleNewPickupStaffChange(select) {
+                    if (select.value === '__add_new__') {
+                        const newStaff = prompt("Enter new staff name:");
+                        if (newStaff && newStaff.trim() !== '') {
+                            const opt = document.createElement('option');
+                            opt.value = newStaff.trim();
+                            opt.textContent = newStaff.trim();
+                            select.insertBefore(opt, select.querySelector('option[value="__add_new__"]'));
+                            select.value = newStaff.trim();
+                        } else {
+                            select.value = '';
+                        }
+                    }
+                }
+
+                function openEnclosuresModal() {
+                    document.getElementById('enclosures-modal').style.display = 'flex';
+                }
+
+                function closeEnclosuresModal() {
+                    document.getElementById('enclosures-modal').style.display = 'none';
+                }
+
+                function saveEnclosures() {
+                    const selected = [];
+                    document.querySelectorAll('.enclosure-cb:checked').forEach(cb => selected.push(cb.value));
+                    
+                    const otherInput = document.getElementById('other-enclosure-input').value;
+                    if (otherInput.trim() !== '') {
+                        otherInput.split(',').forEach(val => {
+                            if (val.trim() !== '') selected.push(val.trim());
+                        });
+                    }
+
+                    const displayArea = document.getElementById('enclosures-display-area');
+                    displayArea.innerHTML = '';
+
+                    if (selected.length === 0) {
+                        displayArea.innerHTML = '<span id="no-enclosures-text">No Enclosures found</span>';
+                    } else {
+                        selected.forEach(enc => {
+                            const badge = document.createElement('span');
+                            badge.textContent = enc;
+                            badge.style.cssText = 'background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; border: 1px solid #bae6fd;';
+                            displayArea.appendChild(badge);
+                        });
+                    }
+                    closeEnclosuresModal();
+                }
+
+                function addPickupProductRow() {
+                    const container = document.getElementById('pickup-products-list');
+                    const rowId = 'prod-row-' + Date.now();
+                    
+                    const rowHtml = `
+                        <div id="${rowId}" class="pickup-box" style="display: flex; gap: 10px; align-items: center; padding: 10px;">
+                            <div style="flex: 2;">
+                                <label class="pickup-label">Product Name</label>
+                                <input type="text" class="pickup-input" list="work-type-options" placeholder="Select or type product...">
+                            </div>
+                            <div style="flex: 1;">
+                                <label class="pickup-label">Quantity</label>
+                                <input type="number" class="pickup-input" value="1" min="1">
+                            </div>
+                            <div style="flex: 1;">
+                                <label class="pickup-label">Tooth/Shade Notes</label>
+                                <input type="text" class="pickup-input" placeholder="e.g. 11,12 / A2">
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <button type="button" class="pickup-btn-small" style="color: #dc2626;" onclick="document.getElementById('${rowId}').remove()"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.insertAdjacentHTML('beforeend', rowHtml);
+                }
+            </script>
 
             <!-- Client Detail Section (Shipment Style) -->
             <div id="section-client-detail" style="display:none;">
@@ -352,7 +740,7 @@
                                         <div style="display:flex; gap:10px;">
                                             <button
                                                 style="flex:1; padding:6px; font-size:11px; background:#fff; border:1px solid #ddd;"
-                                                onclick="alert('Email Price List coming soon!')"><i
+                                                onclick="emailClient()"><i
                                                     class="fas fa-paper-plane"></i> Email</button>
                                             <button
                                                 style="flex:1; padding:6px; font-size:11px; background:#fff; border:1px solid #ddd;"
@@ -918,6 +1306,9 @@
                                 <option>In Production</option>
                                 <option>Complete</option>
                                 <option>On Hold</option>
+                                <option>Try In</option>
+                                <option>Cancelled</option>
+                                <option>Delivered</option>
                             </select>
                         </div>
                         <div>
@@ -970,6 +1361,7 @@
                             <a href="javascript:void(0)" onclick="bulkUpdateStatus('In Production')">In Production</a>
                             <a href="javascript:void(0)" onclick="bulkUpdateStatus('Complete')">Complete</a>
                             <a href="javascript:void(0)" onclick="bulkUpdateStatus('On Hold')">On Hold</a>
+                            <a href="javascript:void(0)" onclick="bulkUpdateStatus('Try In')">Try In</a>
                             <a href="javascript:void(0)" onclick="bulkUpdateStatus('Cancelled')">Cancelled</a>
                             <a href="javascript:void(0)" onclick="bulkUpdateStatus('Delivered')">Delivered</a>
                         </div>
@@ -1023,7 +1415,7 @@
                                 Labels</a>
                         </div>
                     </div>
-                    <button class="btn-toolbar"><i class="fas fa-envelope"></i> Email</button>
+                    <button class="btn-toolbar" onclick="emailClient()"><i class="fas fa-envelope"></i> Email</button>
                     <button class="btn-toolbar" onclick="exportToCSV()"><i class="fas fa-download"></i> Export</button>
 
 
@@ -1515,25 +1907,40 @@
     </div>
 
     <script>
-        const API_BASE = 'https://software-e857.onrender.com/api';
+        const API_BASE = '/api';
         let allClients = [];
         let currentClientId = null;
+        let currentClientEmail = '';
 
         async function loadStaffForAssign() {
             try {
                 const response = await fetch(`${API_BASE}/staff`);
                 const staff = await response.json();
+                
+                // Populate bulk assign dropdown
                 const dropdown = document.getElementById('assign-to-dropdown');
-                if (!dropdown) return;
-
-                dropdown.innerHTML = '<a href="javascript:void(0)" onclick="bulkAssign(null)">Unassigned</a>';
-                staff.forEach(s => {
-                    const a = document.createElement('a');
-                    a.href = 'javascript:void(0)';
-                    a.textContent = s.name;
-                    a.onclick = () => bulkAssign(s.id);
-                    dropdown.appendChild(a);
-                });
+                if (dropdown) {
+                    dropdown.innerHTML = '<a href="javascript:void(0)" onclick="bulkAssign(null)">Unassigned</a>';
+                    staff.forEach(s => {
+                        const a = document.createElement('a');
+                        a.href = 'javascript:void(0)';
+                        a.textContent = s.name;
+                        a.onclick = () => bulkAssign(s.id);
+                        dropdown.appendChild(a);
+                    });
+                }
+                
+                // Populate new pickup staff select
+                const pickupSelect = document.getElementById('new-pickup-staff');
+                if (pickupSelect) {
+                    pickupSelect.innerHTML = '<option value="">Unassigned</option><option value="__add_new__" style="font-weight:bold; color:#3b82f6;">+ Add New Staff...</option>';
+                    staff.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.name;
+                        opt.textContent = s.name;
+                        pickupSelect.insertBefore(opt, pickupSelect.querySelector('option[value="__add_new__"]'));
+                    });
+                }
             } catch (err) { console.error('Error loading staff:', err); }
         }
 
@@ -1891,9 +2298,144 @@
             document.getElementById('calendar-day-modal').style.display = 'none';
         }
 
+        function emailClient() {
+            if (currentClientEmail) {
+                window.location.href = `mailto:${currentClientEmail}?subject=Price List&body=Dear Client, Please find the price list attached.`;
+            } else {
+                alert("Client email not found.");
+            }
+        }
+
+        async function searchLocation(targetId) {
+            const clientId = document.getElementById('new-pickup-client').value;
+            if (!clientId) {
+                alert('Please select a client first.');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/clients/${clientId}`);
+                if (res.ok) {
+                    const client = await res.json();
+                    document.getElementById(targetId).value = client.address || 'No address found for this client.';
+                } else {
+                    alert('Could not fetch client address.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error connecting to server.');
+            }
+        }
+
+        function addLocation(targetId) {
+            const address = prompt('Enter manual address:');
+            if (address) {
+                document.getElementById(targetId).value = address;
+            }
+        }
+
+        async function addStaffQuick() {
+            const name = prompt('Enter new staff name:');
+            if (!name) return;
+            try {
+                const res = await fetch(`${API_BASE}/staff`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, role: 'Delivery' })
+                });
+                if (res.ok) {
+                    alert('Staff added successfully.');
+                    // Refresh staff dropdowns
+                    if (typeof loadStaffForAssign === 'function') {
+                        loadStaffForAssign();
+                    }
+                } else {
+                    alert('Error adding staff.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+            }
+        }
+
+        async function saveFullPickupRequest() {
+            const clientId = document.getElementById('new-pickup-client').value;
+            const staffId = document.getElementById('new-pickup-staff').value;
+            const patientName = document.querySelector('.pickup-input[value="11/06/26"]').parentElement.parentElement.querySelector('input').value; // Selecting via sibling
+            
+            // Collect all products
+            const products = [];
+            document.querySelectorAll('#pickup-products-list .pickup-row').forEach(row => {
+                const type = row.querySelector('select').value;
+                const name = row.querySelector('input').value;
+                if (type || name) products.push(`${type}: ${name}`);
+            });
+
+            // Collect notes and locations
+            const pickupLoc = document.getElementById('pickup-location-input').value;
+            const dropLoc = document.getElementById('drop-location-input').value;
+            
+            const enclosures = [];
+            document.querySelectorAll('.enclosure-cb:checked').forEach(cb => enclosures.push(cb.value));
+
+            const fullNotes = `
+Pickup Location: ${pickupLoc}
+Drop Location: ${dropLoc}
+Enclosures: ${enclosures.join(', ')}
+Products: ${products.join(' | ')}
+            `.trim();
+
+            const body = {
+                clientId: parseInt(clientId),
+                staffId: staffId ? parseInt(staffId) : null,
+                patientName: patientName,
+                productType: products[0] || 'Pickup',
+                status: 'Pending',
+                notes: fullNotes
+            };
+
+            if (!clientId) {
+                alert('Please select a client.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/pickups`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (res.ok) {
+                    alert('Pickup request saved successfully!');
+                    showSection('section-orders');
+                    loadPickups();
+                } else {
+                    const err = await res.json();
+                    alert('Error saving pickup: ' + (err.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Network error.');
+            }
+        }
+
         async function deletePickup(id) {
             if (!confirm('Are you sure you want to delete this pickup request?')) return;
-            alert('Delete functionality coming soon!');
+            try {
+                const res = await fetch(`${API_BASE}/pickups/${id}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    alert('Pickup request deleted successfully.');
+                    loadPickups();
+                } else {
+                    const err = await res.json();
+                    alert('Error deleting pickup: ' + (err.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Network error while deleting pickup.');
+            }
         }
 
         async function loadOrders(statusParam = null, title = null, advParams = '') {
@@ -2011,7 +2553,11 @@
                                 rowHTML += `<td>${order.patientName || '-'}</td>`;
                                 break;
                             case 'products':
-                                rowHTML += `<td style="color: ${getProductColor(order.productType)}; font-weight: 600;">${order.productName || order.productType || '-'}</td>`;
+                                let displayProducts = order.productName || order.productType || '-';
+                                if (order.jobs && order.jobs.length > 0) {
+                                    displayProducts += ', ' + order.jobs.map(j => j.productName || j.productType).join(', ');
+                                }
+                                rowHTML += `<td style="color: ${getProductColor(order.productType)}; font-weight: 600;">${displayProducts}</td>`;
                                 break;
                             case 'modelNo':
                                 rowHTML += `<td style="font-weight: 500;">${order.modelNumber || '-'}</td>`;
@@ -2047,8 +2593,8 @@
                     rowHTML += `
                         <td>
                             <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <a href="javascript:void(0)" onclick="openEditModal(${order.id})" style="color:#3b82f6; text-decoration:none; font-size:12px; font-weight:600; padding:3px 8px; border:1px solid #3b82f6; border-radius:4px; white-space:nowrap;" title="Edit Order"><i class="fas fa-edit" style="margin-right:3px;"></i>Edit</a>
-                                <a href="javascript:void(0)" onclick="viewOrderInvoice(${order.id})" style="color:#6366f1; text-decoration:none; font-size:12px; font-weight:600; padding:3px 8px; border:1px solid #6366f1; border-radius:4px; white-space:nowrap;" title="View Invoice"><i class="fas fa-file-invoice" style="margin-right:3px;"></i>View Invoice</a>
+                                <a href="javascript:void(0)" onclick="openEditModal(${order.id})" style="color:#3b82f6; text-decoration:none; font-size:12px; font-weight:600; padding:3px 8px; border:1px solid #3b82f6; border-radius:4px; white-space:nowrap;" title="Quick View"><i class="fas fa-eye" style="margin-right:3px;"></i>Quick View</a>
+                                <a href="javascript:void(0)" onclick="sendWhatsApp(${order.id})" style="color:#25D366; text-decoration:none; font-size:12px; font-weight:600; padding:3px 8px; border:1px solid #25D366; border-radius:4px; white-space:nowrap;" title="WhatsApp"><i class="fab fa-whatsapp" style="margin-right:3px;"></i>WhatsApp</a>
                             </div>
                         </td>
                     `;
@@ -2305,6 +2851,38 @@
             } catch (err) {
                 console.error(err);
                 alert('Server error while deleting order.');
+            }
+        }
+
+        async function sendWhatsApp(id) {
+            try {
+                const res = await fetch(`${API_BASE}/orders/${id}`);
+                if (!res.ok) throw new Error('Order not found');
+                const order = await res.json();
+                const client = order.client;
+                if (!client) {
+                    alert('Client not found for this order.');
+                    return;
+                }
+                const phone = client.cellPhone || client.phone;
+                if (!phone) {
+                    alert('No phone number found for this client.');
+                    return;
+                }
+                
+                let cleanPhone = phone.replace(/[^0-9+]/g, '');
+                if (!cleanPhone.startsWith('+') && cleanPhone.length <= 8) {
+                    cleanPhone = '968' + cleanPhone;
+                } else if (cleanPhone.startsWith('+')) {
+                    cleanPhone = cleanPhone.substring(1);
+                }
+                
+                const message = encodeURIComponent(`Hello ${client.name}, this is regarding your Order #${order.orderNumber || order.id} for patient ${order.patientName || 'N/A'}.`);
+                const url = `https://wa.me/${cleanPhone}?text=${message}`;
+                window.open(url, '_blank');
+            } catch (err) {
+                console.error(err);
+                alert('Failed to send WhatsApp message.');
             }
         }
 
@@ -2781,7 +3359,7 @@
             if (editOrderId) {
                 openEditModal(editOrderId);
             } else if (clientId) {
-                showClientProfile(clientId);
+                openClientDetail(clientId);
             }
 
             // Image Preview/Selection logic for Edit Order
@@ -3403,6 +3981,13 @@
             const modal = document.createElement('div');
             modal.id = 'grid-settings-modal';
             modal.className = 'modal-overlay';
+            modal.style.alignItems = 'flex-start';
+            // Position near the click or near the top of the viewport
+            let topOffset = 80;
+            if (event && event.clientY) {
+                topOffset = Math.max(20, Math.min(event.clientY - 60, window.innerHeight - 450));
+            }
+            modal.style.paddingTop = topOffset + 'px';
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
@@ -3430,17 +4015,17 @@
                             </table>
                         </div>
                         <div class="footer-actions" style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px;">
-                            <button type="button" class="btn-modal-action" onclick="saveGridSettings()" style="width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">OK</button>
+                            <button type="button" class="btn-modal-action" id="btn-grid-ok" style="width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">OK</button>
                             
                             <div style="position: relative; width: 140px;">
-                                <button type="button" class="btn-modal-action" id="btn-add-fields-trigger" onclick="toggleAddFieldsDropdown(event)" style="width: 100%; height: 30px; border: 1px solid #ccc; background: #fff; color: #007bff; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 4px;"><i class="fas fa-plus"></i> Add Fields</button>
-                                <div id="add-fields-dropdown-container" style="display: none; position: absolute; bottom: 35px; left: 0; background: #fff; border: 1px solid #ccc; padding: 5px; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.15); width: 100%;">
-                                    <select id="add-fields-select" onchange="handleAddFieldSelect(this)" style="width:100%; padding:4px;">
+                                <button type="button" class="btn-modal-action" id="btn-add-fields-trigger" style="width: 100%; height: 30px; border: 1px solid #ccc; background: #fff; color: #007bff; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 4px;"><i class="fas fa-plus"></i> Add Fields</button>
+                                <div id="add-fields-dropdown-container" style="display: none; position: absolute; top: 35px; left: 0; background: #fff; border: 1px solid #ccc; padding: 5px; z-index: 99999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 200px; border-radius: 4px;">
+                                    <select id="add-fields-select" style="width:100%; padding:4px;">
                                     </select>
                                 </div>
                             </div>
                             
-                            <button type="button" class="btn-modal-action" onclick="resetColumnsDraft()" style="width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">Reset</button>
+                            <button type="button" class="btn-modal-action" id="btn-grid-reset" style="width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">Reset</button>
                         </div>
                     </div>
                     
@@ -3550,38 +4135,65 @@
                         </div>
                         
                         <div class="footer-actions" style="display: flex; gap: 10px; margin-top: 15px; justify-content: flex-start;">
-                            <button type="button" class="btn-modal-action" onclick="saveGridSettings()" style="flex: none; width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">OK</button>
-                            <button type="button" class="btn-modal-action" onclick="resetOptionsDraft()" style="flex: none; width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">Reset</button>
+                            <button type="button" class="btn-modal-action" id="btn-grid-opts-ok" style="flex: none; width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">OK</button>
+                            <button type="button" class="btn-modal-action" id="btn-grid-opts-reset" style="flex: none; width: 75px; height: 30px; border: 1px solid #ccc; background: #fff; color: #0056b3; font-weight: bold; cursor: pointer; font-size: 13px; border-radius: 4px;">Reset</button>
                         </div>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
             
-            document.getElementById('opt-default-date-search').value = draftSettings.options.defaultDateSearch;
-            document.getElementById('opt-due-range').value = draftSettings.options.finalDeliveryDueDateRange;
-            document.getElementById('opt-order-range').value = draftSettings.options.orderDateRange;
-            document.getElementById('opt-date-in-range').value = draftSettings.options.dateInRange;
-            document.getElementById('opt-status-range').value = draftSettings.options.statusDateRange;
-            
-            document.getElementById('opt-sort-col-1').value = draftSettings.options.sortColumn1;
-            document.getElementById('opt-sort-col-2').value = draftSettings.options.sortColumn2;
-            
-            document.querySelector(`input[name="opt-sort-dir-1"][value="${draftSettings.options.sortDirection1}"]`).checked = true;
-            document.querySelector(`input[name="opt-sort-dir-2"][value="${draftSettings.options.sortDirection2}"]`).checked = true;
-            
-            document.getElementById('opt-default-date-search').onchange = (e) => draftSettings.options.defaultDateSearch = e.target.value;
-            document.getElementById('opt-due-range').onchange = (e) => draftSettings.options.finalDeliveryDueDateRange = e.target.value;
-            document.getElementById('opt-order-range').onchange = (e) => draftSettings.options.orderDateRange = e.target.value;
-            document.getElementById('opt-date-in-range').onchange = (e) => draftSettings.options.dateInRange = e.target.value;
-            document.getElementById('opt-status-range').onchange = (e) => draftSettings.options.statusDateRange = e.target.value;
-            document.getElementById('opt-sort-col-1').onchange = (e) => draftSettings.options.sortColumn1 = e.target.value;
-            document.getElementById('opt-sort-col-2').onchange = (e) => draftSettings.options.sortColumn2 = e.target.value;
-            
-            document.querySelectorAll('input[name="opt-sort-dir-1"]').forEach(r => r.onchange = (e) => draftSettings.options.sortDirection1 = e.target.value);
-            document.querySelectorAll('input[name="opt-sort-dir-2"]').forEach(r => r.onchange = (e) => draftSettings.options.sortDirection2 = e.target.value);
+            // Initialize options tab values (wrapped in try/catch so buttons still work if this fails)
+            try {
+                const setVal = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+                setVal('opt-default-date-search', draftSettings.options.defaultDateSearch);
+                setVal('opt-due-range', draftSettings.options.finalDeliveryDueDateRange);
+                setVal('opt-order-range', draftSettings.options.orderDateRange);
+                setVal('opt-date-in-range', draftSettings.options.dateInRange);
+                setVal('opt-status-range', draftSettings.options.statusDateRange);
+                setVal('opt-sort-col-1', draftSettings.options.sortColumn1);
+                setVal('opt-sort-col-2', draftSettings.options.sortColumn2);
+                
+                const dir1 = document.querySelector(`input[name="opt-sort-dir-1"][value="${draftSettings.options.sortDirection1 || 'Desc'}"]`);
+                if (dir1) dir1.checked = true;
+                const dir2 = document.querySelector(`input[name="opt-sort-dir-2"][value="${draftSettings.options.sortDirection2 || 'Desc'}"]`);
+                if (dir2) dir2.checked = true;
+                
+                const setChange = (id, fn) => { const el = document.getElementById(id); if (el) el.onchange = fn; };
+                setChange('opt-default-date-search', (e) => draftSettings.options.defaultDateSearch = e.target.value);
+                setChange('opt-due-range', (e) => draftSettings.options.finalDeliveryDueDateRange = e.target.value);
+                setChange('opt-order-range', (e) => draftSettings.options.orderDateRange = e.target.value);
+                setChange('opt-date-in-range', (e) => draftSettings.options.dateInRange = e.target.value);
+                setChange('opt-status-range', (e) => draftSettings.options.statusDateRange = e.target.value);
+                setChange('opt-sort-col-1', (e) => draftSettings.options.sortColumn1 = e.target.value);
+                setChange('opt-sort-col-2', (e) => draftSettings.options.sortColumn2 = e.target.value);
+                
+                document.querySelectorAll('input[name="opt-sort-dir-1"]').forEach(r => r.onchange = (e) => draftSettings.options.sortDirection1 = e.target.value);
+                document.querySelectorAll('input[name="opt-sort-dir-2"]').forEach(r => r.onchange = (e) => draftSettings.options.sortDirection2 = e.target.value);
+            } catch (optErr) {
+                console.error('Error initializing options tab:', optErr);
+            }
 
             renderColumnsTable();
+            
+            // Bind button click handlers programmatically (more reliable than inline onclick)
+            const btnOk = document.getElementById('btn-grid-ok');
+            if (btnOk) btnOk.addEventListener('click', function(e) { e.stopPropagation(); saveGridSettings(); });
+            
+            const btnAddFields = document.getElementById('btn-add-fields-trigger');
+            if (btnAddFields) btnAddFields.addEventListener('click', function(e) { e.stopPropagation(); e.preventDefault(); toggleAddFieldsDropdown(e); });
+            
+            const btnReset = document.getElementById('btn-grid-reset');
+            if (btnReset) btnReset.addEventListener('click', function(e) { e.stopPropagation(); resetColumnsDraft(); });
+            
+            const addFieldsSelect = document.getElementById('add-fields-select');
+            if (addFieldsSelect) addFieldsSelect.addEventListener('change', function() { handleAddFieldSelect(this); });
+            
+            const btnOptsOk = document.getElementById('btn-grid-opts-ok');
+            if (btnOptsOk) btnOptsOk.addEventListener('click', function(e) { e.stopPropagation(); saveGridSettings(); });
+
+            const btnOptsReset = document.getElementById('btn-grid-opts-reset');
+            if (btnOptsReset) btnOptsReset.addEventListener('click', function(e) { e.stopPropagation(); resetOptionsDraft(); });
             
             modal.onclick = (e) => {
                 if (e.target === modal) closeGridSettingsModal();
@@ -3664,7 +4276,10 @@
             }
             const container = document.getElementById('add-fields-dropdown-container');
             if (container) {
-                container.style.display = container.style.display === 'none' ? 'block' : 'none';
+                const isHidden = container.style.display === 'none' || !container.style.display;
+                container.style.display = isHidden ? 'block' : 'none';
+                // Ensure dropdown is populated when shown
+                if (isHidden) updateAddFieldsDropdown();
             }
         }
 
@@ -3721,12 +4336,19 @@
         }
 
         function saveGridSettings() {
-            gridSettings = JSON.parse(JSON.stringify(draftSettings));
-            localStorage.setItem('grid_display_settings', JSON.stringify(gridSettings));
-            
-            renderDateFilterControls();
-            closeGridSettingsModal();
-            loadOrders();
+            try {
+                gridSettings = JSON.parse(JSON.stringify(draftSettings));
+                localStorage.setItem('grid_display_settings', JSON.stringify(gridSettings));
+                
+                renderDateFilterControls();
+                closeGridSettingsModal();
+                loadOrders();
+            } catch (err) {
+                console.error('Error saving grid settings:', err);
+                alert('Settings saved with errors. Page will reload.');
+                closeGridSettingsModal();
+                location.reload();
+            }
         }
     </script>
     <style>
@@ -3908,6 +4530,13 @@
         <option value="OM2">
         <option value="OM3">
     </datalist>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof loadStaffForAssign === 'function') {
+                loadStaffForAssign();
+            }
+        });
+    </script>
 </body>
 
 </html>

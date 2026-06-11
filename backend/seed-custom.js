@@ -75,7 +75,7 @@ async function main() {
     const amount = randomInt(1000, 10000);
     await prisma.invoice.create({
       data: {
-        invoiceNumber: `INV-GEN-${i}-${Date.now()}`,
+        invoiceNumber: (2000 + i).toString(),
         clientId: client.id,
         grossAmount: amount,
         netAmount: amount,

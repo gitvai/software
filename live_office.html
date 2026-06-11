@@ -805,7 +805,7 @@
     </div>
 
     <script>
-        const API_BASE = 'https://software-e857.onrender.com/api';
+        const API_BASE = '/api';
 
         let currentStockFilter = 'All';
         function setStockFilter(filter, btn) {
@@ -1888,6 +1888,62 @@
             openModal('product-modal'); 
         }
 
+        function showAddStaffModal() {
+            document.getElementById('staff-id').value = '';
+            document.getElementById('staff-name').value = '';
+            document.getElementById('staff-role').value = 'Technician';
+            document.getElementById('staff-phone').value = '';
+            document.getElementById('staff-join-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('staff-modal-title').textContent = 'Add New Staff';
+            openModal('staff-modal');
+        }
+
+        async function editStaff(id) {
+            try {
+                const res = await fetch(`${API_BASE}/staff/${id}`);
+                const s = await res.json();
+                document.getElementById('staff-id').value = s.id;
+                document.getElementById('staff-name').value = s.name;
+                document.getElementById('staff-role').value = s.role;
+                document.getElementById('staff-phone').value = s.phone || '';
+                document.getElementById('staff-join-date').value = s.joinDate ? s.joinDate.split('T')[0] : '';
+                document.getElementById('staff-modal-title').textContent = 'Edit Staff';
+                openModal('staff-modal');
+            } catch (err) { console.error(err); }
+        }
+
+        async function saveStaff(event) {
+            event.preventDefault();
+            const id = document.getElementById('staff-id').value;
+            const data = {
+                name: document.getElementById('staff-name').value,
+                role: document.getElementById('staff-role').value,
+                phone: document.getElementById('staff-phone').value,
+                joinDate: document.getElementById('staff-join-date').value
+            };
+            
+            try {
+                let url = `${API_BASE}/staff`;
+                let method = 'POST';
+                if (id) {
+                    url += `/${id}`;
+                    method = 'PUT';
+                }
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert(id ? 'Staff updated successfully!' : 'Staff added successfully!');
+                    closeModal('staff-modal');
+                    fetchStaff();
+                } else {
+                    alert('Failed to save staff');
+                }
+            } catch(err) { console.error(err); }
+        }
+
         async function populateMaterialsDropdown() {
             try {
                 const res = await fetch(`${API_BASE}/materials?category=All`);
@@ -2106,6 +2162,46 @@
             </form>
         </div>
     </div>
+
+    <!-- Staff Modal -->
+    <div id="staff-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999999; justify-content:center; align-items:center;">
+        <div class="modal-content" style="background:#fff; width:400px; border-radius:8px; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 id="staff-modal-title" style="margin:0;">Add New Staff</h3>
+                <button onclick="closeModal('staff-modal')" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="staff-form" onsubmit="saveStaff(event)">
+                <input type="hidden" id="staff-id">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">Staff Name</label>
+                    <input type="text" id="staff-name" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">Role</label>
+                    <select id="staff-role" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        <option value="Technician">Technician</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Delivery Boy">Delivery Boy</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">Phone Number</label>
+                    <input type="text" id="staff-phone" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">Join Date</label>
+                    <input type="date" id="staff-join-date" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" onclick="closeModal('staff-modal')" style="background:none; border:none; cursor:pointer;">Cancel</button>
+                    <button type="submit" class="btn-action primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>
 
